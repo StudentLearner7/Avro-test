@@ -10,10 +10,6 @@ https://github.com/StudentLearner7/avro-test/blob/main/sample.avdl
 
 Step3: Convert avdl to json using below command
 
-java -jar avro-tools-1.9.1.jar  idl sample.avdl sample.json
+java -jar avro-tools-1.9.1.jar  idl sample.avdl
 
-
----
-Test
-
-https://chat.openai.com/share/12f3c952-b792-408f-913c-037150aa911f
+https://chat.openai.com/share/cd8610b5-1f8d-4043-b893-5f500f589da1

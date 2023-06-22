@@ -17,3 +17,20 @@ java -jar avro-tools-1.9.1.jar  idl sample.avdl sample.json
 Test
 
 https://chat.openai.com/share/12f3c952-b792-408f-913c-037150aa911f
+version: '3'
+services:
+  kogito-runtime:
+    image: quay.io/kiegroup/kogito-runtime-jvm:latest
+    ports:
+      - 8080:8080
+
+  kogito-management-console:
+    image: quay.io/kiegroup/kogito-management-console:latest
+    ports:
+      - 8280:8280
+
+  kogito-task-console:
+    image: quay.io/kiegroup/kogito-task-console:latest
+    ports:
+      - 8180:8180
+

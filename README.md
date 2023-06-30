@@ -33,4 +33,4 @@ services:
     image: quay.io/kiegroup/kogito-task-console:latest
     ports:
       - 8180:8180
-
+https://chat.openai.com/share/dba337ff-4034-4aa7-8557-2b5621b00667

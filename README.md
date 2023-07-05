@@ -34,3 +34,7 @@ services:
     ports:
       - 8180:8180
 https://chat.openai.com/share/dba337ff-4034-4aa7-8557-2b5621b00667
+
+___________
+
+https://chat.openai.com/share/90085cd7-e417-4afa-b47c-c69751cd2a2e

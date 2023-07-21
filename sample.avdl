@@ -2,6 +2,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TruncateAllTables {
 
@@ -25,15 +27,22 @@ public class TruncateAllTables {
                          "FROM pg_tables " +
                          "WHERE schemaname NOT IN ('pg_catalog', 'information_schema');";
 
+            List<String> truncateStatements = new ArrayList<>();
+
             try (java.sql.ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String truncateStatement = resultSet.getString(1);
-                    statement.execute(truncateStatement);
+                    truncateStatements.add(truncateStatement);
                 }
             }
 
             // Re-enable foreign key checks
             statement.execute("SET session_replication_role = DEFAULT;");
+
+            // Execute the truncate statements
+            for (String truncateStatement : truncateStatements) {
+                statement.execute(truncateStatement);
+            }
 
             System.out.println("All tables truncated successfully.");
         } catch (SQLException e) {

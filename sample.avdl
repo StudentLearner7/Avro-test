@@ -1,27 +1,43 @@
-@namespace("com.tapad")
-protocol ExampleInterface {
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-  enum ExampleEnum {
-    FOO,
-    BAR,
-    BAZ
-  }
+public class TruncateAllTables {
 
-  record ExampleNesting {
+    public static void main(String[] args) {
+        truncateAllTables();
+    }
 
-    array<int> counts;
+    public static void truncateAllTables() {
+        String url = "jdbc:postgresql://your_host:your_port/your_database";
+        String username = "your_username";
+        String password = "your_password";
 
-    union { null, map<string> } attributes= null;
-  }
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             Statement statement = connection.createStatement()) {
 
-  record Example {
+            // Disable foreign key checks
+            statement.execute("SET session_replication_role = replica;");
 
-    long id;
+            // Generate and execute truncate statements for each table
+            String sql = "SELECT 'TRUNCATE TABLE ' || schemaname || '.' || tablename || ' CASCADE;' " +
+                         "FROM pg_tables " +
+                         "WHERE schemaname NOT IN ('pg_catalog', 'information_schema');";
 
-    union { null, ExampleEnum } my_enum = null;
+            try (java.sql.ResultSet resultSet = statement.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    String truncateStatement = resultSet.getString(1);
+                    statement.execute(truncateStatement);
+                }
+            }
 
-    union { null, ExampleNesting } my_nested_member = null;
+            // Re-enable foreign key checks
+            statement.execute("SET session_replication_role = DEFAULT;");
 
-    union { null, string } guid = null;
-  }
+            System.out.println("All tables truncated successfully.");
+        } catch (SQLException e) {
+            System.err.println("Error truncating tables: " + e.getMessage());
+        }
+    }
 }

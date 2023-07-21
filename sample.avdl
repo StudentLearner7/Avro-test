@@ -1,17 +1,18 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TruncateAllTables {
+public class DropAllTables {
 
     public static void main(String[] args) {
-        truncateAllTables();
+        dropAllTables();
     }
 
-    public static void truncateAllTables() {
+    public static void dropAllTables() {
         String url = "jdbc:postgresql://your_host:your_port/your_database";
         String username = "your_username";
         String password = "your_password";
@@ -22,31 +23,31 @@ public class TruncateAllTables {
             // Disable foreign key checks
             statement.execute("SET session_replication_role = replica;");
 
-            // Generate and execute truncate statements for each table
-            String sql = "SELECT 'TRUNCATE TABLE ' || schemaname || '.' || tablename || ' CASCADE;' " +
+            // Generate and execute drop statements for each table
+            String sql = "SELECT 'DROP TABLE IF EXISTS ' || schemaname || '.' || tablename || ' CASCADE;' " +
                          "FROM pg_tables " +
                          "WHERE schemaname NOT IN ('pg_catalog', 'information_schema');";
 
-            List<String> truncateStatements = new ArrayList<>();
+            List<String> dropStatements = new ArrayList<>();
 
-            try (java.sql.ResultSet resultSet = statement.executeQuery(sql)) {
+            try (ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
-                    String truncateStatement = resultSet.getString(1);
-                    truncateStatements.add(truncateStatement);
+                    String dropStatement = resultSet.getString(1);
+                    dropStatements.add(dropStatement);
                 }
             }
 
             // Re-enable foreign key checks
             statement.execute("SET session_replication_role = DEFAULT;");
 
-            // Execute the truncate statements
-            for (String truncateStatement : truncateStatements) {
-                statement.execute(truncateStatement);
+            // Execute the drop statements
+            for (String dropStatement : dropStatements) {
+                statement.execute(dropStatement);
             }
 
-            System.out.println("All tables truncated successfully.");
+            System.out.println("All tables dropped successfully.");
         } catch (SQLException e) {
-            System.err.println("Error truncating tables: " + e.getMessage());
+            System.err.println("Error dropping tables: " + e.getMessage());
         }
     }
 }

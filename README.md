@@ -28,8 +28,8 @@ do
 
     api_response=$(curl -s -w "\n%{http_code}" "$api_endpoint")
 
-    status_code=$(tail -n 1 <<< "$api_response")
-    response_body=$(head -n -1 <<< "$api_response")
+    status_code=$(echo "$api_response" | tail -n 1)
+    response_body=$(echo "$api_response" | sed '$d')
 
     # Only capture responses with non-200 status codes
     if [ "$status_code" != "200" ]; then

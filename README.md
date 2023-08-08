@@ -1,12 +1,29 @@
-I apologize for the confusion. If you want to obtain a client credentials token using cURL with Keycloak, you can use the following command:
+#!/bin/bash
 
-```bash
-curl -X POST 'https://your-keycloak-domain/auth/realms/your-realm/protocol/openid-connect/token' \
-  -d 'grant_type=client_credentials' \
-  -d 'client_id=your-client-id' \
-  -d 'client_secret=your-client-secret'
-```
+# Name of the HTML file
+html_file="api_results.html"
 
-Make sure to replace `your-keycloak-domain`, `your-realm`, `your-client-id`, and `your-client-secret` with the appropriate values for your Keycloak setup.
+# Clear the HTML file or create a new one
+echo "" > "$html_file"
 
-This request will use the client credentials grant type to obtain an access token for the specified client. Keep in mind that client credentials should be treated securely and should not be exposed in a public client or client-side application.
+# Define an array of API endpoints
+api_endpoints=(
+    "https://api.example.com/endpoint1"
+    "https://api.example.com/endpoint2"
+    # Add more API endpoints here
+)
+
+# Loop through the API endpoints
+for ((i=0; i<${#api_endpoints[@]}; i++))
+do
+    api_response=$(curl -s "${api_endpoints[$i]}")
+
+    # Append the API response to the HTML file
+    echo "<h2>API Call $((i+1))</h2>" >> "$html_file"
+    echo "<pre>$api_response</pre>" >> "$html_file"
+    echo "<hr>" >> "$html_file"
+
+    echo "API Call $((i+1)) done."
+done
+
+echo "All API calls completed. Results are stored in $html_file."

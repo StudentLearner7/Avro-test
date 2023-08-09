@@ -1,10 +1,41 @@
-export default function () {
-  console.log('\x1b[36m%s\x1b[0m', 'Endpoint\tStatus Code\tResponse');
-  
-  endpoints.forEach(endpoint => {
-    let res = http.get(endpoint);
-    let truncatedResponse = res.body.length > 200 ? res.body.substring(0, 200) : res.body;
+const fs = require('fs');
 
-    console.log('\x1b[32m%s\x1b[0m', `${endpoint}\t${res.status}\t${truncatedResponse}`);
-  });
+function generateReport(apiCalls) {
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>API Test Report</title>
+        </head>
+        <body>
+            <h1>API Test Report</h1>
+            <table>
+                <tr>
+                    <th>API Name</th>
+                    <th>Endpoint</th>
+                    <th>Status Code</th>
+                    <th>Response</th>
+                </tr>
+                ${generateRows(apiCalls)}
+            </table>
+        </body>
+        </html>
+    `;
+
+    fs.writeFileSync('api_report.html', htmlContent);
 }
+
+function generateRows(apiCalls) {
+    return apiCalls
+        .map(call => `
+            <tr>
+                <td>${call.name}</td>
+                <td>${call.endpoint}</td>
+                <td>${call.statusCode}</td>
+                <td>${call.statusCode !== 200 ? call.response : ''}</td>
+            </tr>
+        `)
+        .join('');
+}
+
+module.exports = generateReport;

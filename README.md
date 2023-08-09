@@ -1,62 +1,54 @@
+import http from 'k6/http';
+import { sleep } from 'k6';
+import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
 
-# Name of the HTML file
-html_file="api_results.html"
+export let options = {
+    thresholds: {
+        // Define your performance thresholds here if needed
+    },
+    // Output an HTML report after the test completes
+    ext: {
+        loadimpact: {
+            projectID: 123456, // Replace with your LoadImpact project ID if you have one
+            name: 'Functional Test',
+        },
+    },
+};
 
-# Clear the HTML file or create a new one
-echo "" > "$html_file"
+export default function () {
+    let apiEndpoints = [
+        'https://api.example.com/api1',
+        'https://api.example.com/api2',
+        // ... add more API endpoints here
+    ];
 
-# Define colors
-red="<span style=\"color: red;\">"
-green="<span style=\"color: green;\">"
-blue="<span style=\"color: blue;\">"
-end_span="</span>"
+    let responses = [];
 
-# Get start time
-start_time=$(date "+%Y-%m-%d %H:%M:%S")
+    for (let endpoint of apiEndpoints) {
+        let response = http.get(endpoint);
+        responses.push({ endpoint, body: response.body });
+    }
 
-# Define an array of API endpoints with names
-declare -a api_endpoints=(
-    "API 1|https://api.example.com/endpoint1"
-    "API 2|https://api.example.com/endpoint2"
-    # Add more API endpoints here in the format "Name|Endpoint"
-)
+    // Simulate some wait time
+    sleep(5); // Sleep for 5 seconds
 
-# Loop through the API endpoints
-for endpoint_info in "${api_endpoints[@]}"
-do
-    IFS="|" read -ra api_info <<< "$endpoint_info"
-    api_name="${api_info[0]}"
-    api_endpoint="${api_info[1]}"
+    // Create an HTML report with the API responses
+    let htmlContent = `
+        <html>
+            <head>
+                <title>API Responses</title>
+            </head>
+            <body>
+                <h1>API Responses</h1>
+                <ul>
+                    ${responses.map(res => `<li><strong>${res.endpoint}</strong>: ${res.body}</li>`).join('')}
+                </ul>
+            </body>
+        </html>
+    `;
 
-    api_response=$(curl -s -w "\n%{http_code}" "$api_endpoint")
-
-    status_code=$(echo "$api_response" | tail -n 1)
-    response_body=$(echo "$api_response" | sed '$d')
-
-    # Only capture responses with non-200 status codes
-    if [ "$status_code" != "200" ]; then
-        echo "<h2>$red API Name: $api_name $end_span</h2>" >> "$html_file"
-        echo "<p>Endpoint: $blue <a href=\"$api_endpoint\">$api_endpoint</a> $end_span</p>" >> "$html_file"
-        echo "<p>Status Code: $red $status_code $end_span</p>" >> "$html_file"
-        echo "<pre>$response_body</pre>" >> "$html_file"
-        echo "<hr>" >> "$html_file"
-
-        echo "$api_name - Non-200 response captured."
-    else
-        echo "<h2>$green API Name: $api_name $end_span</h2>" >> "$html_file"
-        echo "<p>Endpoint: $blue <a href=\"$api_endpoint\">$api_endpoint</a> $end_span</p>" >> "$html_file"
-        echo "<p>Status Code: $green $status_code $end_span</p>" >> "$html_file"
-        echo "<hr>" >> "$html_file"
-
-        echo "$api_name - 200 OK response."
-    fi
-done
-
-# Get end time
-end_time=$(date "+%Y-%m-%d %H:%M:%S")
-
-# Add start and end time to the HTML file
-echo "<h2>Start Time: $start_time</h2>" >> "$html_file"
-echo "<h2>End Time: $end_time</h2>" >> "$html_file"
-
-echo "API testing completed. Results are stored in $html_file."
+    // Save the HTML content to a file
+    let reportFile = open('api_responses.html', 'w');
+    reportFile.write(htmlContent);
+    reportFile.close();
+}

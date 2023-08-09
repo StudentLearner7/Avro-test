@@ -1,29 +1,10 @@
-import http from 'k6/http';
-import { writeFileSync } from 'k6/fs';
-
-const endpoints = [
-  'https://endpoint1.com',
-  'https://endpoint2.com',
-  // ... add all 10 endpoints
-];
-
-let html = '<table><tr><th>Endpoint</th><th>Status Code</th><th>Response</th></tr>';
-
 export default function () {
+  console.log('\x1b[36m%s\x1b[0m', 'Endpoint\tStatus Code\tResponse');
+  
   endpoints.forEach(endpoint => {
     let res = http.get(endpoint);
     let truncatedResponse = res.body.length > 200 ? res.body.substring(0, 200) : res.body;
-    html += `<tr><td>${endpoint}</td><td>${res.status}</td><td>${truncatedResponse}</td></tr>`;
+
+    console.log('\x1b[32m%s\x1b[0m', `${endpoint}\t${res.status}\t${truncatedResponse}`);
   });
 }
-
-export function handleSummary(data) {
-  html += '</table>';
-  return {
-    'report.html': html,
-  };
-}
-
-export let options = {
-  iterations: 1,
-};

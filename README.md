@@ -1,41 +1,20 @@
-const fs = require('fs');
+const responseJson = JSON.parse(responseBody);
 
-function generateReport(apiCalls) {
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>API Test Report</title>
-        </head>
-        <body>
-            <h1>API Test Report</h1>
-            <table>
-                <tr>
-                    <th>API Name</th>
-                    <th>Endpoint</th>
-                    <th>Status Code</th>
-                    <th>Response</th>
-                </tr>
-                ${generateRows(apiCalls)}
-            </table>
-        </body>
-        </html>
-    `;
+// Recursive function to check status
+const checkStatusRecursive = (json) => {
+    for (const key in json) {
+        if (typeof json[key] === 'object') {
+            checkStatusRecursive(json[key]);
+        } else if (key === 'status' && json[key] !== 'UP') {
+            pm.test('Status is not UP', false);
+            return;
+        }
+    }
+};
 
-    fs.writeFileSync('api_report.html', htmlContent);
+// Start checking status
+for (const key in responseJson) {
+    if (typeof responseJson[key] === 'object') {
+        checkStatusRecursive(responseJson[key]);
+    }
 }
-
-function generateRows(apiCalls) {
-    return apiCalls
-        .map(call => `
-            <tr>
-                <td>${call.name}</td>
-                <td>${call.endpoint}</td>
-                <td>${call.statusCode}</td>
-                <td>${call.statusCode !== 200 ? call.response : ''}</td>
-            </tr>
-        `)
-        .join('');
-}
-
-module.exports = generateReport;

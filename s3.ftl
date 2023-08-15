@@ -29,15 +29,25 @@ private ${entityName}DTO toDTO(${entityName} entity) {
 <#list nonPrimitiveFields as field>
 private ${field.type} toEntity(${field.type}DTO dto) {
     ${field.type} entity = new ${field.type}();
-    // set fields from dto to entity
-    // ...
+<#list field.fields as subField>
+    <#if subField.type?ends_with("DTO")>
+        entity.set${subField.name?cap_first}(toEntity(dto.get${subField.name?cap_first}()));
+    <#else>
+        entity.set${subField.name?cap_first}(dto.get${subField.name?cap_first}());
+    </#if>
+</#list>
     return entity;
 }
 
 private ${field.type}DTO toDTO(${field.type} entity) {
     ${field.type}DTO dto = new ${field.type}DTO();
-    // set fields from entity to dto
-    // ...
+<#list field.fields as subField>
+    <#if subField.type?ends_with("DTO")>
+        dto.set${subField.name?cap_first}(toDTO(entity.get${subField.name?cap_first}()));
+    <#else>
+        dto.set${subField.name?cap_first}(entity.get${subField.name?cap_first}());
+    </#if>
+</#list>
     return dto;
 }
 </#list>

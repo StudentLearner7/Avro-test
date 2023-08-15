@@ -1,54 +1,46 @@
-import freemarker.template.*;
-import org.reflections.Reflections;
-
-import java.io.*;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.Collectors;
-
-public class CodeGenerator {
-
+public class Main {
     public static void main(String[] args) throws Exception {
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
-        cfg.setDirectoryForTemplateLoading(new File("path/to/your/templates"));
-        cfg.setDefaultEncoding("UTF-8");
-        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        cfg.setClassForTemplateLoading(Main.class, "/");
+        
+        // Example: Employee class
+        Class<?> entityClass = Employee.class; // Change this to test other entities
+        String entityName = entityClass.getSimpleName();
 
-        // Define the package that contains your entity classes
-        String entityPackage = "com.your.package.entities";
-
-        // Use Reflections to find all classes in the package
-        Reflections reflections = new Reflections(entityPackage);
-        Set<Class<?>> entityClasses = reflections.getTypesAnnotatedWith(javax.persistence.Entity.class);
-
-        // Process templates for each entity class
-        for (Class<?> entityClass : entityClasses) {
-            String entityName = entityClass.getSimpleName();
-
-            List<Map<String, String>> fields = Arrays.stream(entityClass.getDeclaredFields())
-                    .map(field -> {
-                        Map<String, String> fieldInfo = new HashMap<>();
-                        fieldInfo.put("name", field.getName());
-                        fieldInfo.put("type", field.getType().getSimpleName());
-                        return fieldInfo;
-                    })
-                    .collect(Collectors.toList());
-
-            Map<String, Object> root = new HashMap<>();
-            root.put("entityName", entityName);
-            root.put("fields", fields);
-
-            // Process the DTO template
-            Template dtoTemplate = cfg.getTemplate("dto.ftl");
-            try (Writer out = new FileWriter("output/" + entityName + "DTO.java")) {
-                dtoTemplate.process(root, out);
-            }
-
-            // Process the Service template
-            Template serviceTemplate = cfg.getTemplate("service.ftl");
-            try (Writer out = new FileWriter("output/" + entityName + "Service.java")) {
-                serviceTemplate.process(root, out);
+        // Identify the non-primitive fields
+        List<Map<String, Object>> fields = new ArrayList<>();
+        Set<String> nonPrimitiveFieldTypes = new HashSet<>();
+        for (Field field : entityClass.getDeclaredFields()) {
+            String fieldType = field.getType().getSimpleName();
+            String fieldName = field.getName();
+            fields.add(Map.of("name", fieldName, "type", fieldType));
+            if (isNonPrimitive(field.getType())) {
+                nonPrimitiveFieldTypes.add(fieldType);
             }
         }
+        
+        // Create the data-model
+        Map<String, Object> data = new HashMap<>();
+        data.put("entityName", entityName);
+        data.put("fields", fields);
+        data.put("nonPrimitiveFieldTypes", nonPrimitiveFieldTypes);
+
+        // Process DTO template
+        processTemplate(cfg, "dto.ftl", data);
+        
+        // Process Service template
+        processTemplate(cfg, "service.ftl", data);
+    }
+
+    private static boolean isNonPrimitive(Class<?> type) {
+        return !type.isPrimitive() && !type.getName().startsWith("java.lang");
+    }
+
+    private static void processTemplate(Configuration cfg, String templateName, Map<String, Object> data) throws Exception {
+        Template temp = cfg.getTemplate(templateName);
+        Writer out = new OutputStreamWriter(System.out);
+        temp.process(data, out);
+        out.flush();
+        System.out.println(); // Line break between templates
     }
 }

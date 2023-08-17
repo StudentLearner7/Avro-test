@@ -1,54 +1,38 @@
-package com.your.package.service;
+package ${packageName};
 
-import com.your.package.dto.${entityName}DTO;
-import com.your.package.entities.${entityName};
-import com.your.package.repository.${entityName}Repository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.stream.Collectors;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-@Service
-public class ${entityName}Service {
+public class ${testClassName} {
 
-    @Autowired
-    private ${entityName}Repository repository;
+    @Test
+    public void testCreateReadUpdateDelete() {
+        // Create two records
+        YourServiceClass service = new YourServiceClass();
+        YourDTO createDTO1 = ...; // Create a DTO with sample data
+        YourDTO createDTO2 = ...; // Create another DTO with sample data
+        YourDTO createdDTO1 = service.create(createDTO1);
+        YourDTO createdDTO2 = service.create(createDTO2);
 
-    // DTO to Entity conversion
-    private ${entityName} toEntity(${entityName}DTO dto) {
-        ${entityName} entity = new ${entityName}();
-<#list fields as field>
-        entity.set${field.name?cap_first}(dto.get${field.name?cap_first}());
-</#list>
-        return entity;
+        // Read one of the records
+        Long recordIdToRead = createdDTO1.getId();
+        YourDTO readDTO = service.read(recordIdToRead);
+        assertNotNull(readDTO);
+
+        // Update both records
+        YourDTO updateDTO1 = ...; // Update the DTO with new data
+        YourDTO updateDTO2 = ...; // Update the other DTO with new data
+        YourDTO updatedDTO1 = service.update(recordIdToRead, updateDTO1);
+        YourDTO updatedDTO2 = service.update(createdDTO2.getId(), updateDTO2);
+        assertEquals(updateDTO1.getField(), updatedDTO1.getField());
+        assertEquals(updateDTO2.getField(), updatedDTO2.getField());
+
+        // Delete both records
+        service.delete(recordIdToRead);
+        service.delete(createdDTO2.getId());
+        assertNull(service.read(recordIdToRead));
+        assertNull(service.read(createdDTO2.getId()));
     }
 
-    // Entity to DTO conversion
-    private ${entityName}DTO toDTO(${entityName} entity) {
-        ${entityName}DTO dto = new ${entityName}DTO();
-<#list fields as field>
-        dto.set${field.name?cap_first}(entity.get${field.name?cap_first}());
-</#list>
-        return dto;
-    }
-
-    public List<${entityName}DTO> findAll() {
-        return repository.findAll().stream()
-            .map(this::toDTO)
-            .collect(Collectors.toList());
-    }
-
-    public ${entityName}DTO findById(Long id) {
-        return repository.findById(id)
-            .map(this::toDTO)
-            .orElse(null);
-    }
-
-    public ${entityName}DTO save(${entityName}DTO dto) {
-        return toDTO(repository.save(toEntity(dto)));
-    }
-
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
+    // Add more test methods as needed
 }

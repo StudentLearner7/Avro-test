@@ -1,29 +1,33 @@
--- Create the Org table
+CREATE SEQUENCE org_seq START 1;
+
 CREATE TABLE Org (
-    org_id SERIAL PRIMARY KEY,
+    org_id INT DEFAULT nextval('org_seq') PRIMARY KEY,
     org_name VARCHAR(100) NOT NULL
 );
 
--- Create the Department table
+CREATE SEQUENCE dept_seq START 1;
+
 CREATE TABLE Department (
-    dept_id SERIAL PRIMARY KEY,
-    dept_name VARCHAR(100) NOT NULL,
-    org_id INT REFERENCES Org(org_id)
+    dept_id INT DEFAULT nextval('dept_seq') PRIMARY KEY,
+    org_id INT REFERENCES Org(org_id),
+    dept_name VARCHAR(100) NOT NULL
 );
 
--- Create the Address table
+CREATE SEQUENCE addr_seq START 1;
+
 CREATE TABLE Address (
-    address_id SERIAL PRIMARY KEY,
-    street VARCHAR(100) NOT NULL,
-    city VARCHAR(50) NOT NULL,
+    addr_id INT DEFAULT nextval('addr_seq') PRIMARY KEY,
+    street VARCHAR(200) NOT NULL,
+    city VARCHAR(100) NOT NULL,
     state VARCHAR(50) NOT NULL,
     postal_code VARCHAR(20) NOT NULL
 );
 
--- Create the Employee table
+CREATE SEQUENCE emp_seq START 1;
+
 CREATE TABLE Employee (
-    emp_id SERIAL PRIMARY KEY,
+    emp_id INT DEFAULT nextval('emp_seq') PRIMARY KEY,
+    dept_id INT REFERENCES Department(dept_id),
     emp_name VARCHAR(100) NOT NULL,
-    department_id INT REFERENCES Department(dept_id),
-    address_id INT REFERENCES Address(address_id) UNIQUE
+    address_id INT REFERENCES Address(addr_id) UNIQUE
 );

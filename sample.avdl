@@ -1,53 +1,29 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+-- Create the Org table
+CREATE TABLE Org (
+    org_id SERIAL PRIMARY KEY,
+    org_name VARCHAR(100) NOT NULL
+);
 
-public class DropAllTables {
+-- Create the Department table
+CREATE TABLE Department (
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(100) NOT NULL,
+    org_id INT REFERENCES Org(org_id)
+);
 
-    public static void main(String[] args) {
-        dropAllTables();
-    }
+-- Create the Address table
+CREATE TABLE Address (
+    address_id SERIAL PRIMARY KEY,
+    street VARCHAR(100) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    state VARCHAR(50) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL
+);
 
-    public static void dropAllTables() {
-        String url = "jdbc:postgresql://your_host:your_port/your_database";
-        String username = "your_username";
-        String password = "your_password";
-
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             Statement statement = connection.createStatement()) {
-
-            // Disable foreign key checks
-            statement.execute("SET session_replication_role = replica;");
-
-            // Generate and execute drop statements for each table
-            String sql = "SELECT 'DROP TABLE IF EXISTS ' || schemaname || '.' || tablename || ' CASCADE;' " +
-                         "FROM pg_tables " +
-                         "WHERE schemaname NOT IN ('pg_catalog', 'information_schema');";
-
-            List<String> dropStatements = new ArrayList<>();
-
-            try (ResultSet resultSet = statement.executeQuery(sql)) {
-                while (resultSet.next()) {
-                    String dropStatement = resultSet.getString(1);
-                    dropStatements.add(dropStatement);
-                }
-            }
-
-            // Re-enable foreign key checks
-            statement.execute("SET session_replication_role = DEFAULT;");
-
-            // Execute the drop statements
-            for (String dropStatement : dropStatements) {
-                statement.execute(dropStatement);
-            }
-
-            System.out.println("All tables dropped successfully.");
-        } catch (SQLException e) {
-            System.err.println("Error dropping tables: " + e.getMessage());
-        }
-    }
-}
+-- Create the Employee table
+CREATE TABLE Employee (
+    emp_id SERIAL PRIMARY KEY,
+    emp_name VARCHAR(100) NOT NULL,
+    department_id INT REFERENCES Department(dept_id),
+    address_id INT REFERENCES Address(address_id) UNIQUE
+);

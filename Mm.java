@@ -1,41 +1,19 @@
+   public static void printFields(Object obj) throws IllegalAccessException {
+        Field[] fields = obj.getClass().getDeclaredFields();
 
-import com.example.demo.entity.User;
-import com.example.demo.repository.UserRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.junit4.SpringRunner;
+        for (Field field : fields) {
+            field.setAccessible(true);
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-@RunWith(SpringRunner.class)
-@DataJpaTest
-public class UserServiceTest {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    private UserService userService;
-
-    @Before
-    public void setUp() {
-        userService = new UserService();
-        userService.setUserRepository(userRepository);
+            if (field.getType().equals(List.class)) {
+                List<?> collection = (List<?>) field.get(obj);
+                if (collection != null) {
+                    System.out.println(field.getName() + " (Collection):");
+                    for (Object item : collection) {
+                        printFields(item);
+                    }
+                }
+            } else {
+                System.out.println(field.getName() + ": " + field.get(obj));
+            }
+        }
     }
-
-    @Test
-    public void testCreateAndFindUser() {
-        User user = new User();
-        user.setName("John Doe");
-
-        User createdUser = userService.createUser(user);
-        assertNotNull(createdUser);
-        assertNotNull(createdUser.getId());
-
-        User foundUser = userService.findUserById(createdUser.getId());
-        assertEquals(createdUser.getName(), foundUser.getName());
-    }
-}

@@ -1,32 +1,55 @@
-@Configuration
-@EnableJpaRepositories(basePackageClasses = PersonRepository.class)
-@EntityScan(basePackageClasses = Person.class)
-@PropertySource("classpath:test.properties")
-public class TestConfig {
-    @Bean
-    public DataSource dataSource() {
-        return new EmbeddedDatabaseBuilder()
-                .setType(EmbeddedDatabaseType.H2)
-                .build();
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseResult;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+
+import java.io.File;
+import java.io.IOException;
+
+public class JpaEntityParser {
+    public static void main(String[] args) {
+        // Load your Java file
+        File javaFile = new File("YourEntity.java");
+
+        try {
+            // Parse the Java file
+            ParseResult<CompilationUnit> result = new JavaParser().parse(javaFile);
+            if (result.isSuccessful()) {
+                CompilationUnit cu = result.getResult().get();
+
+                // Check fields for @Id or @EmbeddedId annotations
+                cu.findAll(FieldDeclaration.class).forEach(field -> {
+                    NodeList<AnnotationExpr> annotations = field.getAnnotations();
+                    if (hasIdOrEmbeddedIdAnnotation(annotations)) {
+                        String dataType = field.getCommonType().asString();
+                        String fieldName = field.getVariables().get(0).getNameAsString();
+                        System.out.println("Field " + fieldName + " has data type: " + dataType);
+                    }
+                });
+
+                // Check methods for @Id or @EmbeddedId annotations
+                cu.findAll(MethodDeclaration.class).forEach(method -> {
+                    NodeList<AnnotationExpr> annotations = method.getAnnotations();
+                    if (hasIdOrEmbeddedIdAnnotation(annotations)) {
+                        String dataType = method.getTypeAsString();
+                        String methodName = method.getNameAsString();
+                        System.out.println("Method " + methodName + " has data type: " + dataType);
+                    }
+                });
+            } else {
+                System.err.println("Failed to parse the Java file.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        vendorAdapter.setGenerateDdl(true);
-
-        LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
-        factory.setJpaVendorAdapter(vendorAdapter);
-        factory.setPackagesToScan(Person.class.getPackage().getName());
-        factory.setDataSource(dataSource());
-
-        return factory;
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
-        JpaTransactionManager txManager = new JpaTransactionManager();
-        txManager.setEntityManagerFactory(entityManagerFactory);
-        return txManager;
+    // Check if annotations contain @Id or @EmbeddedId
+    private static boolean hasIdOrEmbeddedIdAnnotation(NodeList<AnnotationExpr> annotations) {
+        return annotations.stream()
+                .anyMatch(annotation -> annotation.getNameAsString().equals("Id") || annotation.getNameAsString().equals("EmbeddedId"));
     }
 }

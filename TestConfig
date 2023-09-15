@@ -1,55 +1,17 @@
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseResult;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
+CREATE TABLE Students (
+    student_id serial PRIMARY KEY,
+    student_name VARCHAR (255) NOT NULL
+);
 
-import java.io.File;
-import java.io.IOException;
+CREATE TABLE Courses (
+    course_id serial PRIMARY KEY,
+    course_name VARCHAR (255) NOT NULL
+);
 
-public class JpaEntityParser {
-    public static void main(String[] args) {
-        // Load your Java file
-        File javaFile = new File("YourEntity.java");
-
-        try {
-            // Parse the Java file
-            ParseResult<CompilationUnit> result = new JavaParser().parse(javaFile);
-            if (result.isSuccessful()) {
-                CompilationUnit cu = result.getResult().get();
-
-                // Check fields for @Id or @EmbeddedId annotations
-                cu.findAll(FieldDeclaration.class).forEach(field -> {
-                    NodeList<AnnotationExpr> annotations = field.getAnnotations();
-                    if (hasIdOrEmbeddedIdAnnotation(annotations)) {
-                        String dataType = field.getCommonType().asString();
-                        String fieldName = field.getVariables().get(0).getNameAsString();
-                        System.out.println("Field " + fieldName + " has data type: " + dataType);
-                    }
-                });
-
-                // Check methods for @Id or @EmbeddedId annotations
-                cu.findAll(MethodDeclaration.class).forEach(method -> {
-                    NodeList<AnnotationExpr> annotations = method.getAnnotations();
-                    if (hasIdOrEmbeddedIdAnnotation(annotations)) {
-                        String dataType = method.getTypeAsString();
-                        String methodName = method.getNameAsString();
-                        System.out.println("Method " + methodName + " has data type: " + dataType);
-                    }
-                });
-            } else {
-                System.err.println("Failed to parse the Java file.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Check if annotations contain @Id or @EmbeddedId
-    private static boolean hasIdOrEmbeddedIdAnnotation(NodeList<AnnotationExpr> annotations) {
-        return annotations.stream()
-                .anyMatch(annotation -> annotation.getNameAsString().equals("Id") || annotation.getNameAsString().equals("EmbeddedId"));
-    }
-}
+CREATE TABLE Student_Course (
+    student_id INT,
+    course_id INT,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES Students (student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses (course_id)
+);

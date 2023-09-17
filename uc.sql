@@ -1,48 +1,39 @@
--- Create sequence for id columns
-CREATE SEQUENCE org_id_seq;
-CREATE SEQUENCE dept_id_seq;
-CREATE SEQUENCE emp_id_seq;
-CREATE SEQUENCE addr_id_seq;
-
--- Create sequence for cid in Org table
-CREATE SEQUENCE org_cid_seq;
-
--- Create Org table
 CREATE TABLE Org (
-    id INTEGER DEFAULT nextval('org_id_seq') PRIMARY KEY,
-    cid INTEGER DEFAULT nextval('org_cid_seq'),
-    org_name VARCHAR(255) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
-    CONSTRAINT unique_cid UNIQUE (cid)
+    org_id SERIAL PRIMARY KEY,
+    org_name VARCHAR(255) NOT NULL
 );
 
--- Create Department table
+-- Create the Department table with a foreign key to Org
 CREATE TABLE Department (
-    id INTEGER DEFAULT nextval('dept_id_seq') PRIMARY KEY,
-    org_id INTEGER REFERENCES Org (id),
-    cid INTEGER REFERENCES Org (cid),
-    department_name VARCHAR(255) NOT NULL
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(255) NOT NULL,
+    org_id INT REFERENCES Org(org_id)
 );
 
--- Create Employee table
-CREATE TABLE Employee (
-    id INTEGER DEFAULT nextval('emp_id_seq') PRIMARY KEY,
-    org_id INTEGER REFERENCES Org (id),
-    cid INTEGER REFERENCES Org (cid),
-    department_id INTEGER REFERENCES Department (id),
-    employee_name VARCHAR(255) NOT NULL,
-    position VARCHAR(255)
+-- Create the Employees table with a foreign key to Department
+CREATE TABLE Employees (
+    emp_id SERIAL PRIMARY KEY,
+    emp_name VARCHAR(255) NOT NULL,
+    dept_id INT REFERENCES Department(dept_id)
 );
 
--- Create Address table
+-- Create the Address table with a foreign key to Employees (one-to-one)
 CREATE TABLE Address (
-    id INTEGER DEFAULT nextval('addr_id_seq') PRIMARY KEY,
-    org_id INTEGER REFERENCES Org (id),
-    cid INTEGER REFERENCES Org (cid),
-    employee_id INTEGER REFERENCES Employee (id) UNIQUE,
-    street VARCHAR(255),
-    city VARCHAR(255),
-    state VARCHAR(255),
-    postal_code VARCHAR(20)
+    addr_id SERIAL PRIMARY KEY,
+    street_address VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    emp_id INT UNIQUE REFERENCES Employees(emp_id)
+);
+
+-- Create the Projects table
+CREATE TABLE Projects (
+    project_id SERIAL PRIMARY KEY,
+    project_name VARCHAR(255) NOT NULL
+);
+
+-- Create the EmployeesProjects junction table (many-to-many)
+CREATE TABLE EmployeesProjects (
+    emp_id INT REFERENCES Employees(emp_id),
+    project_id INT REFERENCES Projects(project_id),
+    PRIMARY KEY (emp_id, project_id)
 );

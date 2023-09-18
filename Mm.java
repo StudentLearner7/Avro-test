@@ -1,19 +1,13 @@
-   public static void printFields(Object obj) throws IllegalAccessException {
-        Field[] fields = obj.getClass().getDeclaredFields();
+String input = "@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = \"parentEntity\")";
 
-        for (Field field : fields) {
-            field.setAccessible(true);
+// Split the string by commas and spaces
+String[] parts = input.split("[,\\s]+");
 
-            if (field.getType().equals(List.class)) {
-                List<?> collection = (List<?>) field.get(obj);
-                if (collection != null) {
-                    System.out.println(field.getName() + " (Collection):");
-                    for (Object item : collection) {
-                        printFields(item);
-                    }
-                }
-            } else {
-                System.out.println(field.getName() + ": " + field.get(obj));
-            }
-        }
+// Loop through the parts to find the "mappedBy" attribute
+for (int i = 0; i < parts.length; i++) {
+    if (parts[i].equals("mappedBy")) {
+        String mappedByValue = parts[i + 2].replace("\"", "");
+        System.out.println("MappedBy value: " + mappedByValue);
+        break;
     }
+}

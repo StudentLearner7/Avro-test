@@ -1,17 +1,26 @@
-CREATE TABLE Students (
-    student_id serial PRIMARY KEY,
-    student_name VARCHAR (255) NOT NULL
-);
+public class TableNameToEntityNameConverter {
+    public static String convertTableNameToEntityName(String tableName) {
+        // Split the table name by underscores
+        String[] parts = tableName.split("_");
+        
+        // Initialize a StringBuilder to construct the entity name
+        StringBuilder entityNameBuilder = new StringBuilder();
+        
+        // Capitalize the first letter of each part and append it to the entity name
+        for (String part : parts) {
+            if (part.length() > 0) {
+                entityNameBuilder.append(Character.toUpperCase(part.charAt(0)))
+                                 .append(part.substring(1));
+            }
+        }
+        
+        // Convert the StringBuilder to a String and return the entity name
+        return entityNameBuilder.toString();
+    }
 
-CREATE TABLE Courses (
-    course_id serial PRIMARY KEY,
-    course_name VARCHAR (255) NOT NULL
-);
-
-CREATE TABLE Student_Course (
-    student_id INT,
-    course_id INT,
-    PRIMARY KEY (student_id, course_id),
-    FOREIGN KEY (student_id) REFERENCES Students (student_id),
-    FOREIGN KEY (course_id) REFERENCES Courses (course_id)
-);
+    public static void main(String[] args) {
+        String tableName = "ent_org_data";
+        String entityName = convertTableNameToEntityName(tableName);
+        System.out.println("Entity Name: " + entityName); // This will print "Entity Name: EntOrgData"
+    }
+}

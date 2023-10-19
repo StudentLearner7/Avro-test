@@ -1,46 +1,40 @@
-public class Main {
-    public static void main(String[] args) throws Exception {
-        Configuration cfg = new Configuration(Configuration.VERSION_2_3_31);
-        cfg.setClassForTemplateLoading(Main.class, "/");
-        
-        // Example: Employee class
-        Class<?> entityClass = Employee.class; // Change this to test other entities
-        String entityName = entityClass.getSimpleName();
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-        // Identify the non-primitive fields
-        List<Map<String, Object>> fields = new ArrayList<>();
-        Set<String> nonPrimitiveFieldTypes = new HashSet<>();
-        for (Field field : entityClass.getDeclaredFields()) {
-            String fieldType = field.getType().getSimpleName();
-            String fieldName = field.getName();
-            fields.add(Map.of("name", fieldName, "type", fieldType));
-            if (isNonPrimitive(field.getType())) {
-                nonPrimitiveFieldTypes.add(fieldType);
-            }
+import java.util.concurrent.CountDownLatch;
+
+@SpringBootTest
+public class EmployeeControllerTest {
+    @Autowired
+    private EmployeeController employeeController;
+
+    @Test
+    public void testConcurrentUpdates() throws InterruptedException {
+        int numColumns = 7;
+        CountDownLatch latch = new CountDownLatch(numColumns);
+
+        // Create an EmployeeDTO with initial data
+        EmployeeDTO initialDTO = new EmployeeDTO();
+        initialDTO.setFirstName("John");
+        initialDTO.setLastName("Doe");
+        // Set other fields...
+
+        for (int i = 0; i < numColumns; i++) {
+            // Create a copy of the initialDTO to modify a single field
+            EmployeeDTO employeeDTO = new EmployeeDTO();
+            employeeDTO.setFirstName(initialDTO.getFirstName());
+            employeeDTO.setLastName(initialDTO.getLastName());
+            // Set other fields...
+
+            // Update a single column in a separate thread
+            new Thread(() -> {
+                employeeController.createOrUpdateEmployee(employeeDTO);
+                latch.countDown();
+            }).start();
         }
-        
-        // Create the data-model
-        Map<String, Object> data = new HashMap<>();
-        data.put("entityName", entityName);
-        data.put("fields", fields);
-        data.put("nonPrimitiveFieldTypes", nonPrimitiveFieldTypes);
 
-        // Process DTO template
-        processTemplate(cfg, "dto.ftl", data);
-        
-        // Process Service template
-        processTemplate(cfg, "service.ftl", data);
-    }
-
-    private static boolean isNonPrimitive(Class<?> type) {
-        return !type.isPrimitive() && !type.getName().startsWith("java.lang");
-    }
-
-    private static void processTemplate(Configuration cfg, String templateName, Map<String, Object> data) throws Exception {
-        Template temp = cfg.getTemplate(templateName);
-        Writer out = new OutputStreamWriter(System.out);
-        temp.process(data, out);
-        out.flush();
-        System.out.println(); // Line break between templates
+        // Wait for all threads to finish
+        latch.await();
     }
 }

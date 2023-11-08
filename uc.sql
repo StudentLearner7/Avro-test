@@ -1,39 +1,55 @@
-CREATE TABLE Org (
-    org_id SERIAL PRIMARY KEY,
-    org_name VARCHAR(255) NOT NULL
-);
-
--- Create the Department table with a foreign key to Org
+-- Create the Department table
 CREATE TABLE Department (
-    dept_id SERIAL PRIMARY KEY,
-    dept_name VARCHAR(255) NOT NULL,
-    org_id INT REFERENCES Org(org_id)
+    department_id serial PRIMARY KEY,
+    department_name varchar(255) NOT NULL
 );
 
--- Create the Employees table with a foreign key to Department
-CREATE TABLE Employees (
-    emp_id SERIAL PRIMARY KEY,
-    emp_name VARCHAR(255) NOT NULL,
-    dept_id INT REFERENCES Department(dept_id)
+-- Create the Employee table with a foreign key reference to Department
+CREATE TABLE Employee (
+    employee_id serial PRIMARY KEY,
+    employee_name varchar(255) NOT NULL,
+    department_id integer REFERENCES Department(department_id)
 );
 
--- Create the Address table with a foreign key to Employees (one-to-one)
+-- Create the Address table
 CREATE TABLE Address (
-    addr_id SERIAL PRIMARY KEY,
-    street_address VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL,
-    emp_id INT UNIQUE REFERENCES Employees(emp_id)
+    address_id serial PRIMARY KEY,
+    employee_id integer REFERENCES Employee(employee_id),
+    address_line1 varchar(255) NOT NULL,
+    address_line2 varchar(255),
+    city varchar(255) NOT NULL,
+    state varchar(255) NOT NULL,
+    postal_code varchar(20) NOT NULL
 );
 
--- Create the Projects table
-CREATE TABLE Projects (
-    project_id SERIAL PRIMARY KEY,
-    project_name VARCHAR(255) NOT NULL
-);
+CREATE OR REPLACE FUNCTION UpdateEmployeeNamesToChris() RETURNS void AS $$
+BEGIN
+    UPDATE Employee
+    SET employee_name = 'Chris';
+END;
+$$ LANGUAGE plpgsql;
 
--- Create the EmployeesProjects junction table (many-to-many)
-CREATE TABLE EmployeesProjects (
-    emp_id INT REFERENCES Employees(emp_id),
-    project_id INT REFERENCES Projects(project_id),
-    PRIMARY KEY (emp_id, project_id)
-);
+
+CREATE OR REPLACE FUNCTION UpdateEmployeeAndDepartmentNames() RETURNS void AS $$
+BEGIN
+    UPDATE Employee
+    SET employee_name = 'Chris';
+
+    UPDATE Department
+    SET department_name = 'Finance';
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION UpdateEmployeeDepartmentAndAddress() RETURNS void AS $$
+BEGIN
+    UPDATE Employee
+    SET employee_name = 'Chris';
+
+    UPDATE Department
+    SET department_name = 'Finance';
+
+    UPDATE Address
+    SET address_line1 = 'New York';
+END;
+$$ LANGUAGE plpgsql;

@@ -1,0 +1,23 @@
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
+import org.hibernate.stat.SecondLevelCacheStatistics;
+
+// Method to print cache size for each entity
+public void printEntityCacheSizes() {
+    SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
+    Statistics statistics = sessionFactory.getStatistics();
+
+    // Get all cache region names
+    String[] regionNames = statistics.getSecondLevelCacheRegionNames();
+
+    for (String regionName : regionNames) {
+        SecondLevelCacheStatistics cacheStats = statistics.getSecondLevelCacheStatistics(regionName);
+        long elementCountInMemory = cacheStats.getElementCountInMemory();
+        long elementCountOnDisk = cacheStats.getElementCountOnDisk();
+
+        System.out.println("Cache Region: " + regionName);
+        System.out.println("Elements in Memory: " + elementCountInMemory);
+        System.out.println("Elements on Disk: " + elementCountOnDisk);
+        // Add any other statistics you need
+    }
+}

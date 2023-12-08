@@ -1,3 +1,6 @@
+Its using Chevrotain javascript parser building tool kit & building a customized parser..
+
+
 import { CstParser } from 'chevrotain';
 import { tokens as LexerTokens } from './lexer/lexer.js';
 import { NAME } from './lexer/shared-tokens.js';

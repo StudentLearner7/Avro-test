@@ -1,0 +1,6 @@
+<#-- Blob type validations (minbytes and maxbytes) -->
+        <#if field.type == "byte[]" || field.type == "Blob">
+            <#if field.validations.containsKey("minbytes") || field.validations.containsKey("maxbytes")>
+            @Size(<#if field.validations.containsKey("minbytes")>min = ${field.validations["minbytes"]}<#if field.validations.containsKey("maxbytes")>, </#if></#if><#if field.validations.containsKey("maxbytes")>max = ${field.validations["maxbytes"]}</#if>)
+            </#if>
+        </#if>

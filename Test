@@ -1,0 +1,33 @@
+@Override
+public void enterEntityDeclaration(JDLParser.EntityDeclarationContext ctx) {
+    String entityName = ctx.entityName().getText();
+    EntityInfo entityInfo = new EntityInfo();
+    entityInfo.name = entityName;
+
+    ctx.fieldDeclaration().forEach(fieldCtx -> {
+        FieldInfo fieldInfo = new FieldInfo();
+        fieldInfo.name = fieldCtx.fieldName().getText();
+        fieldInfo.type = fieldCtx.fieldType().getText();
+
+        fieldCtx.fieldValidation().forEach(validationCtx -> {
+            String fullValidationText = validationCtx.getStart().getText();
+            String validationType = fullValidationText.split("\\(")[0];
+            String validationValue = null;
+
+            if (validationType.equals("minlength") || validationType.equals("maxlength")) {
+                validationValue = validationCtx.DECIMAL_LITERAL().getText();
+            } else if (validationType.equals("pattern")) {
+                validationValue = validationCtx.STRING_LITERAL().getText();
+            } else if (validationType.equals("unique")) {
+                validationValue = "true";
+            }
+
+            fieldInfo.validations.put(validationType, validationValue);
+        });
+
+        entityInfo.fields.add(fieldInfo);
+    });
+
+    // Store the entity information for later processing
+    entitiesInfo.put(entityName, entityInfo);
+}

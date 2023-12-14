@@ -1,10 +1,8 @@
 <#function formatColumnName name>
-    <#if name?matches("[a-z]+([A-Z][a-z]+)*")>
-        <#return name?replace("([A-Z])", "_$1")?lower_case>
+    <#local formattedName = name?replace("([A-Z])", "_$1", "r")>
+    <#if formattedName != name>
+        <#return formattedName?lower_case>
     <#else>
         <#return name>
     </#if>
 </#function>
-
-
- @Column(name = "${formatColumnName(field.name)}")

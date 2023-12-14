@@ -1,0 +1,129 @@
+// ...
+
+fieldDeclaration : fieldName fieldType fieldValidation*;
+
+fieldValidation : 
+    'required' |
+    'min(' DECIMAL_LITERAL ')' |
+    'max(' DECIMAL_LITERAL ')' |
+    'minlength(' DECIMAL_LITERAL ')' |
+    'maxlength(' DECIMAL_LITERAL ')' |
+    'pattern("' STRING_LITERAL '")' |
+    'minbytes(' DECIMAL_LITERAL ')' |
+    'maxbytes(' DECIMAL_LITERAL ')' |
+    'unique';
+
+DECIMAL_LITERAL : [0-9]+;
+STRING_LITERAL : '"' ('\\"'|.)*? '"';
+
+// ...
+
+
+
+---
+
+public class FieldInfo {
+    public String name;
+    public String type;
+    public Map<String, Object> validations = new HashMap<>();
+}
+
+// Inside your listener method
+@Override
+public void enterFieldDeclaration(JDLParser.FieldDeclarationContext ctx) {
+    FieldInfo fieldInfo = new FieldInfo();
+    fieldInfo.name = ctx.fieldName().getText();
+    fieldInfo.type = ctx.fieldType().getText();
+
+    for (JDLParser.FieldValidationContext validationCtx : ctx.fieldValidation()) {
+        String validationType = validationCtx.getStart().getText();
+        Object validationValue = null;
+
+        switch (validationType) {
+            case "min":
+            case "max":
+            case "minlength":
+            case "maxlength":
+            case "minbytes":
+            case "maxbytes":
+                validationValue = Integer.parseInt(validationCtx.DECIMAL_LITERAL().getText());
+                break;
+            case "pattern":
+                validationValue = validationCtx.STRING_LITERAL().getText();
+                break;
+            case "unique":
+                validationValue = true;
+                break;
+        }
+
+        fieldInfo.validations.put(validationType, validationValue);
+    }
+
+    // Add fieldInfo to the respective entity
+}
+
+
+---
+
+@Entity
+public class ${entity.name} {
+    <#list entity.fields as field>
+        <#-- Blob type validations (minbytes and maxbytes) -->
+        <#if field.type == "byte[]" || field.type == "Blob">
+            <#if field.validations.containsKey("minbytes")>
+            @Size(min = ${field.validations["minbytes"]})
+            </#if>
+            <#if field.validations.containsKey("maxbytes")>
+            @Size(max = ${field.validations["maxbytes"]})
+            </#if>
+        </#if>
+
+        // ... include other validations as before ...
+
+        private ${field.type} ${field.name};
+    </#list>
+
+    // ... other entity code ...
+}
+
+
+---
+
+@Entity
+public class ${entity.name} {
+    <#list entity.fields as field>
+        <#-- Numeric type validations -->
+        <#if field.type == "Integer" || field.type == "Long" || field.type == "Double" || field.type == "Float">
+            <#if field.validations.containsKey("min")>
+            @Min(value = ${field.validations["min"]})
+            </#if>
+            <#if field.validations.containsKey("max")>
+            @Max(value = ${field.validations["max"]})
+            </#if>
+        </#if>
+
+        <#-- String-specific validations -->
+        <#if field.type == "String">
+            <#if field.validations.containsKey("minlength")>
+            @Size(min = ${field.validations["minlength"]})
+            </#if>
+            <#if field.validations.containsKey("maxlength")>
+            @Size(max = ${field.validations["maxlength"]})
+            </#if>
+            <#if field.validations.containsKey("pattern")>
+            @Pattern(regexp = ${field.validations["pattern"]})
+            </#if>
+        </#if>
+
+        <#if field.validations.containsKey("unique")>
+        @Column(unique = true)
+        </#if>
+        private ${field.type} ${field.name};
+    </#list>
+
+    // ... other entity code ...
+}
+
+--
+
+

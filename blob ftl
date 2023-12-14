@@ -1,3 +1,10 @@
- <#if field.validations["minbytes"]?? || field.validations["maxbytes"]??>
-            @Size(<#if field.validations["minbytes"]??>min = ${field.validations["minbytes"]}<#if field.validations["maxbytes"]??>, </#if></#if><#if field.validations["maxbytes"]??>max = ${field.validations["maxbytes"]}</#if>)
-            </#if>
+<#function formatColumnName name>
+    <#if name?matches("[a-z]+([A-Z][a-z]+)*")>
+        <#return name?replace("([A-Z])", "_$1")?lower_case>
+    <#else>
+        <#return name>
+    </#if>
+</#function>
+
+
+ @Column(name = "${formatColumnName(field.name)}")

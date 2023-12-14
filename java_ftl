@@ -1,44 +1,34 @@
-@Override
-public void enterFieldDeclaration(JDLParser.FieldDeclarationContext ctx) {
-    FieldInfo fieldInfo = new FieldInfo();
-    fieldInfo.name = ctx.fieldName().getText();
-    fieldInfo.type = ctx.fieldType().getText();
+<#list entity.fields as field>
+    <#-- Prepare the attributes for the @Column annotation -->
+    <#assign columnAttributes = []>
+    <#if field.validations["maxlength"]??>
+        <#assign columnAttributes = columnAttributes + ["length = " + field.validations["maxlength"]]>
+    </#if>
+    <#if field.validations["unique"]??>
+        <#assign columnAttributes = columnAttributes + ["unique = true"]>
+    </#if>
 
-    for (JDLParser.FieldValidationContext validationCtx : ctx.fieldValidation()) {
-        String validationType = validationCtx.getStart().getText();
-        Object validationValue = null;
-        if (validationType.equals("minlength") || validationType.equals("maxlength")) {
-            validationValue = Integer.parseInt(validationCtx.DECIMAL_LITERAL().getText());
-        } else if (validationType.equals("pattern")) {
-            validationValue = validationCtx.STRING_LITERAL().getText();
-        } else if (validationType.equals("unique")) {
-            validationValue = true;  // 'unique' is a boolean flag
-        }
-        fieldInfo.validations.put(validationType, validationValue);
-    }
-
-
-
-@Entity
-public class ${entity.name} {
-    <#list entity.fields as field>
-        <#if field.type == "String">
-            <#-- String-specific validations -->
-            <#if field.validations.containsKey("minlength")>
-            @Size(min = ${field.validations["minlength"]})
-            </#if>
-            <#if field.validations.containsKey("maxlength")>
-            @Size(max = ${field.validations["maxlength"]})
-            </#if>
-            <#if field.validations.containsKey("pattern")>
-            @Pattern(regexp = ${field.validations["pattern"]})
-            </#if>
+    <#-- JPA annotations for size constraints -->
+    <#if field.validations["minlength"]?? || field.validations["maxlength"]??>
+        @Size(
+        <#if field.validations["minlength"]??>
+            min = ${field.validations["minlength"]}<#if field.validations["maxlength"]??>,</#if>
         </#if>
-        <#if field.validations.containsKey("unique")>
-        @Column(unique = true)
+        <#if field.validations["maxlength"]??>
+            max = ${field.validations["maxlength"]}
         </#if>
-        private ${field.type} ${field.name};
-    </#list>
+        )
+    </#if>
 
-    // ... other entity code ...
-}
+    <#-- Pattern validation -->
+    <#if field.validations["pattern"]??>
+        @Pattern(regexp = ${field.validations["pattern"]})
+    </#if>
+
+    <#-- Column annotation with attributes -->
+    <#if columnAttributes?size gt 0>
+        @Column(<#list columnAttributes as attr>${attr}<#if attr_has_next>, </#if></#list>)
+    </#if>
+    
+    private ${field.type} ${field.name};
+</#list>

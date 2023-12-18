@@ -1,0 +1,104 @@
+grammar JDL;
+
+// Parser rules
+jdlFile : (entityDeclaration | relationshipDeclaration | embeddableDeclaration)*;
+
+entityDeclaration : 'entity' entityName '{' fieldDeclaration* '}';
+embeddableDeclaration : 'embeddable' entityName '{' fieldDeclaration* '}';
+
+fieldDeclaration : fieldName fieldType primaryKeyAnnotation?;
+primaryKeyAnnotation : '@Id' | '@EmbeddableId';
+
+relationshipDeclaration : 'relationship' relationshipType '{' relationshipBody '}';
+
+// ... existing rules for relationshipType, relationshipBody, fieldValidation, etc.
+
+// Lexer rules
+// ... existing lexer rules for IDENTIFIER, DECIMAL_LITERAL, STRING_LITERAL, WS, etc.
+
+
+---
+
+public class FieldInfo {
+    public String name;
+    public String type;
+    public Map<String, Object> validations = new HashMap<>();
+    public String primaryKeyAnnotation;  // To store @Id or @EmbeddableId
+}
+
+public class EntityInfo {
+    public String name;
+    public List<FieldInfo> fields = new ArrayList<>();
+    public boolean isEmbeddable = false;  // Flag to indicate if it's an embeddable entity
+}
+
+private Map<String, EntityInfo> entitiesInfo = new HashMap<>();
+
+@Override
+public void enterEntityDeclaration(JDLParser.EntityDeclarationContext ctx) {
+    EntityInfo entityInfo = new EntityInfo();
+    entityInfo.name = ctx.entityName().getText();
+    entityInfo.isEmbeddable = false;  // Regular entities are not embeddable
+
+    processFieldDeclarations(ctx, entityInfo);
+    entitiesInfo.put(entityInfo.name, entityInfo);
+}
+
+@Override
+public void enterEmbeddableDeclaration(JDLParser.EmbeddableDeclarationContext ctx) {
+    EntityInfo entityInfo = new EntityInfo();
+    entityInfo.name = ctx.entityName().getText();
+    entityInfo.isEmbeddable = true;  // This is an embeddable entity
+
+    processFieldDeclarations(ctx, entityInfo);
+    entitiesInfo.put(entityInfo.name, entityInfo);
+}
+
+private void processFieldDeclarations(JDLParser.EntityDeclarationContext ctx, EntityInfo entityInfo) {
+    for (JDLParser.FieldDeclarationContext fieldCtx : ctx.fieldDeclaration()) {
+        FieldInfo fieldInfo = new FieldInfo();
+        fieldInfo.name = fieldCtx.fieldName().getText();
+        fieldInfo.type = fieldCtx.fieldType().getText();
+
+        // Process validations
+        // ...
+
+        // Process primary key annotations
+        if (fieldCtx.primaryKeyAnnotation() != null) {
+            fieldInfo.primaryKeyAnnotation = fieldCtx.primaryKeyAnnotation().getText();
+        }
+
+        entityInfo.fields.add(fieldInfo);
+    }
+}
+
+---
+  ftl
+
+  <#-- Entity template -->
+@Entity
+public class ${entity.name} {
+    <#list entity.fields as field>
+        <#if field.primaryKeyAnnotation == "@Id">
+        @Id
+        </#if>
+        <#if field.primaryKeyAnnotation == "@EmbeddableId">
+        @EmbeddedId
+        </#if>
+        // ... other annotations ...
+        private ${field.type} ${field.name};
+    </#list>
+}
+
+<#-- Embeddable template -->
+@Embeddable
+public class ${entity.name} {
+    <#list entity.fields as field>
+        // No primary key annotations in embeddables
+        // ... other annotations ...
+        private ${field.type} ${field.name};
+    </#list>
+}
+
+
+  

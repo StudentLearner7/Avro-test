@@ -6,15 +6,37 @@ jdlFile : (entityDeclaration | relationshipDeclaration | embeddableDeclaration)*
 entityDeclaration : 'entity' entityName '{' fieldDeclaration* '}';
 embeddableDeclaration : 'embeddable' entityName '{' fieldDeclaration* '}';
 
-fieldDeclaration : fieldName fieldType primaryKeyAnnotation?;
+fieldDeclaration : fieldName fieldType fieldValidation* primaryKeyAnnotation?;
+
+fieldValidation : 
+    'required' |
+    'min(' DECIMAL_LITERAL ')' |
+    'max(' DECIMAL_LITERAL ')' |
+    'minlength(' DECIMAL_LITERAL ')' |
+    'maxlength(' DECIMAL_LITERAL ')' |
+    'pattern("' STRING_LITERAL '")' |
+    'minbytes(' DECIMAL_LITERAL ')' |
+    'maxbytes(' DECIMAL_LITERAL ')' |
+    'unique';
+
 primaryKeyAnnotation : '@Id' | '@EmbeddableId';
 
 relationshipDeclaration : 'relationship' relationshipType '{' relationshipBody '}';
 
-// ... existing rules for relationshipType, relationshipBody, fieldValidation, etc.
+// ... existing rules for relationshipType, relationshipBody, etc.
 
 // Lexer rules
-// ... existing lexer rules for IDENTIFIER, DECIMAL_LITERAL, STRING_LITERAL, WS, etc.
+entityName : IDENTIFIER;
+fieldName : IDENTIFIER;
+fieldType : IDENTIFIER;
+targetEntity : IDENTIFIER;
+sourceEntity : IDENTIFIER;
+
+IDENTIFIER : [a-zA-Z_][a-zA-Z0-9_]*;
+DECIMAL_LITERAL : [0-9]+;
+STRING_LITERAL : '"' ('\\"'|.)*? '"';
+WS : [ \t\r\n]+ -> skip;
+
 
 
 ---

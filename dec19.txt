@@ -1,0 +1,50 @@
+@Entity
+public class ${entity.name} {
+    <#list entity.fields as field>
+        // Field annotations...
+        private ${field.type} ${field.name};
+    </#list>
+
+    <#list entity.relationships as relationship>
+        <#if relationship.type == "ManyToMany">
+            <#if relationship.isOwningSide>
+            @ManyToMany
+            @JoinTable(
+                name = "${relationship.sourceEntity}_${relationship.targetEntity}",
+                joinColumns = @JoinColumn(name = "${relationship.sourceField}_id"),
+                inverseJoinColumns = @JoinColumn(name = "${relationship.targetField}_id")
+            )
+            <#else>
+            @ManyToMany(mappedBy = "${relationship.sourceField}")
+            </#if>
+            private Set<${relationship.targetEntity}> ${relationship.targetField} = new HashSet<>();
+        </#if>
+    </#list>
+}
+
+--
+
+  @Entity
+public class ${entity.name} {
+    <#list entity.fields as field>
+        // Field annotations...
+        private ${field.type} ${field.name};
+    </#list>
+
+    <#list entity.relationships as relationship>
+        <#if relationship.type == "ManyToMany">
+            <#if relationship.isUnidirectional>
+                <#if entity.name == relationship.sourceEntity>
+                @ManyToMany
+                private Set<${relationship.targetEntity}> ${relationship.targetField};
+                <#else>
+                @ManyToMany(mappedBy = "${relationship.sourceField}")
+                private Set<${relationship.sourceEntity}> ${relationship.sourceField};
+                </#if>
+            <#else>
+            @ManyToMany
+            private Set<${relationship.targetEntity}> ${relationship.targetField};
+            </#if>
+        </#if>
+    </#list>
+}

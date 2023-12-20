@@ -1,0 +1,52 @@
+grammar JDL;
+
+// ...
+
+relationshipDeclaration : 'relationship' relationshipType '{' relationshipBody '}';
+
+relationshipType : 'OneToOne' | 'OneToMany' | 'ManyToOne' | 'ManyToMany';
+
+relationshipBody : sourceEntity relationshipField joinColumn? 'to' targetEntity relationshipField;
+
+joinColumn : 'joinColumn(' STRING_LITERAL ')';
+
+// ...
+
+
+---
+
+  public class RelationshipInfo {
+    // ... existing fields ...
+    public String joinColumnName; // For OneToMany relationships
+}
+
+@Override
+public void enterRelationshipDeclaration(JDLParser.RelationshipDeclarationContext ctx) {
+    // ... existing code ...
+
+    if (ctx.relationshipBody().joinColumn() != null) {
+        relationship.joinColumnName = ctx.relationshipBody().joinColumn().STRING_LITERAL().getText().replaceAll("\"", "");
+    }
+
+    // ... add relationship to entity ...
+}
+
+--
+
+  @Entity
+public class ${entity.name} {
+    // ... fields ...
+
+    <#list entity.relationships as relationship>
+        <#if relationship.type == "OneToMany">
+        @OneToMany
+        <#if relationship.joinColumnName??>
+        @JoinColumn(name = "${relationship.joinColumnName}")
+        <#else>
+        // Default mappedBy if joinColumnName is not specified
+        mappedBy = "${relationship.sourceField}"
+        </#if>
+        private Set<${relationship.targetEntity}> ${relationship.targetField} = new HashSet<>();
+        </#if>
+    </#list>
+}

@@ -1,45 +1,8 @@
-// Existing code...
-
-@Override
-public void enterRelationshipDeclaration(JDLParser.RelationshipDeclarationContext ctx) {
-    // Existing code...
-
-    switch (relationshipType) {
-        // Existing cases...
-        case "ManyToOne":
-            handleManyToOne(sourceEntity, sourceFieldName, targetEntity, targetFieldName, ctx.relationshipField());
-            break;
-        // Existing cases...
-    }
-}
-
-private void handleManyToOne(String sourceEntity, String sourceFieldName, String targetEntity, String targetFieldName, List<JDLParser.RelationshipFieldContext> relationshipFields) {
-    // Existing code...
-
-    // Process JoinColumns
-    processJoinColumns(relationshipFields);
-}
-
-private void processJoinColumns(List<JDLParser.RelationshipFieldContext> relationshipFields) {
-    for (JDLParser.RelationshipFieldContext fieldContext : relationshipFields) {
-        List<JDLParser.JoinColumnContext> joinColumns = fieldContext.joinColumn();
-        for (JDLParser.JoinColumnContext joinColumn : joinColumns) {
-            processJoinColumn(joinColumn);
-        }
-    }
-}
-
-private void processJoinColumn(JDLParser.JoinColumnContext joinColumn) {
-    String columnName = joinColumn.joinColumnAttributes().STRING().getText();
-    // You can now use 'columnName' as needed (e.g., generating code, passing to ftl, etc.).
-    // Existing or additional logic for handling join columns...
-}
-
-
-<#if relationship.isManyToOne>
-    @ManyToOne
+<#if relationship.relationshipType == "ManyToOne">
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumns({
     <#list relationship.joinColumns as joinColumn>
-        @JoinColumn(name = "${joinColumn.columnName}")
+        @JoinColumn(name = "${joinColumn.columnName}", referencedColumnName = "${joinColumn.referencedColumnName}")<#sep>,
     </#list>
-    private ${relationship.targetEntity} ${relationship.fieldName};
+    })
 </#if>

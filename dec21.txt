@@ -1,13 +1,45 @@
-IDENTIFIER : [a-zA-Z_][a-zA-Z0-9_]*;
-INT : [0-9]+;
+// Existing code...
 
-// Other lexer rules...
+@Override
+public void enterRelationshipDeclaration(JDLParser.RelationshipDeclarationContext ctx) {
+    // Existing code...
 
-// Parse rules
-relationshipDeclaration : 'relationship' relationshipType '{' relationshipBody '}';
-relationshipBody : sourceEntity relationshipField? 'to' targetEntity relationshipField?;
-relationshipField : '{' fieldName ('(' IDENTIFIER ')')? joinColumn* '}';
-joinColumn : 'joinColumn' '{' joinColumnAttributes '}';
-joinColumnAttributes : 'name' '(' STRING ')' ;
+    switch (relationshipType) {
+        // Existing cases...
+        case "ManyToOne":
+            handleManyToOne(sourceEntity, sourceFieldName, targetEntity, targetFieldName, ctx.relationshipField());
+            break;
+        // Existing cases...
+    }
+}
 
-// Other parse rules...
+private void handleManyToOne(String sourceEntity, String sourceFieldName, String targetEntity, String targetFieldName, List<JDLParser.RelationshipFieldContext> relationshipFields) {
+    // Existing code...
+
+    // Process JoinColumns
+    processJoinColumns(relationshipFields);
+}
+
+private void processJoinColumns(List<JDLParser.RelationshipFieldContext> relationshipFields) {
+    for (JDLParser.RelationshipFieldContext fieldContext : relationshipFields) {
+        List<JDLParser.JoinColumnContext> joinColumns = fieldContext.joinColumn();
+        for (JDLParser.JoinColumnContext joinColumn : joinColumns) {
+            processJoinColumn(joinColumn);
+        }
+    }
+}
+
+private void processJoinColumn(JDLParser.JoinColumnContext joinColumn) {
+    String columnName = joinColumn.joinColumnAttributes().STRING().getText();
+    // You can now use 'columnName' as needed (e.g., generating code, passing to ftl, etc.).
+    // Existing or additional logic for handling join columns...
+}
+
+
+<#if relationship.isManyToOne>
+    @ManyToOne
+    <#list relationship.joinColumns as joinColumn>
+        @JoinColumn(name = "${joinColumn.columnName}")
+    </#list>
+    private ${relationship.targetEntity} ${relationship.fieldName};
+</#if>

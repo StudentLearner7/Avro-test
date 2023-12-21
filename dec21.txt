@@ -1,0 +1,13 @@
+IDENTIFIER : [a-zA-Z_][a-zA-Z0-9_]*;
+INT : [0-9]+;
+
+// Other lexer rules...
+
+// Parse rules
+relationshipDeclaration : 'relationship' relationshipType '{' relationshipBody '}';
+relationshipBody : sourceEntity relationshipField? 'to' targetEntity relationshipField?;
+relationshipField : '{' fieldName ('(' IDENTIFIER ')')? joinColumn* '}';
+joinColumn : 'joinColumn' '{' joinColumnAttributes '}';
+joinColumnAttributes : 'name' '(' STRING ')' ;
+
+// Other parse rules...

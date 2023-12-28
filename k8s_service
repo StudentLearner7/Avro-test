@@ -24,3 +24,20 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "100m"
+
+---
+
+# nginx-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort

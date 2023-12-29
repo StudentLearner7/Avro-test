@@ -1,39 +1,56 @@
-# java-app-deployment.yaml
+# Dockerfile
+
+# Use the official Tomcat image
+FROM tomcat:latest
+
+# Copy the YourKit agent to Tomcat's lib directory
+COPY libyjpagent.so /usr/local/tomcat/lib/
+
+# Set environment variable to enable YourKit Profiler
+ENV JAVA_TOOL_OPTIONS="-agentpath:/usr/local/tomcat/lib/libyjpagent.so=port=10001"
+
+---
+
+
+docker build -t yourkit-tomcat .
+kubectl apply -f tomcat-deployment.yaml
+kubectl apply -f tomcat-service.yaml
+
+---
+
+# tomcat-with-yourkit.yaml
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: java-app-deployment
+  name: tomcat-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: java-app
+      app: tomcat-app
   template:
     metadata:
       labels:
-        app: java-app
+        app: tomcat-app
     spec:
       containers:
-      - name: java-app-container
-        image: tomcat:latest
+      - name: tomcat-container
+        image: yourlocaltomcat:latest
         ports:
         - containerPort: 8080
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: "-agentpath:/path/to/yourkit/libyjpagent.so=port=10001"
+          value: "-agentpath:/usr/local/tomcat/lib/libyjpagent.so=port=10001"
 
 ---
-
-# java-app-service.yaml
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: java-app-service
+  name: tomcat-service
 spec:
   selector:
-    app: java-app
+    app: tomcat-app
   ports:
     - protocol: TCP
       port: 8080

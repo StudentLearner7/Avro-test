@@ -1,0 +1,24 @@
+public class MyProfilerExample {
+    public static void main(String[] args) {
+        for (int i = 0; i < 1000000; i++) {
+            performSomeWork();
+        }
+    }
+
+    private static void performSomeWork() {
+        int[] array = new int[1000];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = i * 2;
+        }
+        calculateSum(array);
+    }
+
+    private static void calculateSum(int[] array) {
+        int sum = 0;
+        for (int value : array) {
+            sum += value;
+        }
+    }
+}
+
+java -agentpath:/path/to/yourkit/yourkit-agent-linux64.so=port=10001 YourProgramClassName

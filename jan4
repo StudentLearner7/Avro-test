@@ -1,45 +1,9 @@
-strong 
+In the context of Java garbage collection, memory is often divided into several areas, each serving a specific purpose. The terms you mentioned are related to the memory organization in the Java Heap
 
-Object obj = new Object(); // Strong reference
+:Eden Space:Eden space is the area of the heap where new objects are initially created.It is the main pool for young objects and is the first destination for newly allocated memory.
 
+Survivor Space:Survivor spaces (usually there are two, S0 and S1) are used to hold objects that survive one garbage collection cycle in the Eden space.After each garbage collection, objects that are still in use are moved from the Eden space to one of the survivor spaces.
 
-soft
+Tenured (Old) Generation:Objects that survive multiple garbage collection cycles in the survivor space are eventually promoted to the tenured generation.This area contains older and more long-lived objects. Garbage collection in this space is less frequent compared to the young generation.
 
-import java.lang.ref.SoftReference;
-
-public class SoftReferenceExample {
-    public static void main(String[] args) {
-        Object obj = new Object();
-        SoftReference<Object> softRef = new SoftReference<>(obj);
-
-        // obj still has a strong reference, and softRef is a soft reference
-        obj = null; // Now, obj has only the soft reference holding it
-
-        // At this point, softRef may still hold the object, depending on memory availability
-        // The garbage collector may collect the object only when memory is under pressure
-    }
-}
-
-
-weak
-
-import java.lang.ref.WeakReference;
-
-public class WeakReferenceExample {
-    public static void main(String[] args) {
-        Object obj = new Object();
-        WeakReference<Object> weakRef = new WeakReference<>(obj);
-
-        // obj still has a strong reference, and weakRef is a weak reference
-        obj = null; // Now, obj has only the weak reference holding it
-
-        // The garbage collector may collect the object in the next cycle, regardless of memory availability
-    }
-}
-
-
-unreachable
-
-Object obj = new Object();
-WeakReference<Object> weakRef = new WeakReference<>(obj);
-obj = null; // obj becomes unreachable
+Perm (or Metaspace in newer Java versions):The PermGen space has been replaced by Metaspace in recent Java versions.Metaspace holds metadata about classes and is separate from the Java heap. It dynamically reclaims memory used for class metadata.The process typically involves objects being created in the Eden space, surviving objects being moved to survivor spaces, and eventually, long-lived objects being promoted to the tenured generation. The garbage collector primarily focuses on the young generation because younger objects tend to have a shorter lifespan.Understanding these memory areas is crucial for optimizing garbage collection and improving the overall performance of Java applications.

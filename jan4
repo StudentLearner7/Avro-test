@@ -1,0 +1,45 @@
+strong 
+
+Object obj = new Object(); // Strong reference
+
+
+soft
+
+import java.lang.ref.SoftReference;
+
+public class SoftReferenceExample {
+    public static void main(String[] args) {
+        Object obj = new Object();
+        SoftReference<Object> softRef = new SoftReference<>(obj);
+
+        // obj still has a strong reference, and softRef is a soft reference
+        obj = null; // Now, obj has only the soft reference holding it
+
+        // At this point, softRef may still hold the object, depending on memory availability
+        // The garbage collector may collect the object only when memory is under pressure
+    }
+}
+
+
+weak
+
+import java.lang.ref.WeakReference;
+
+public class WeakReferenceExample {
+    public static void main(String[] args) {
+        Object obj = new Object();
+        WeakReference<Object> weakRef = new WeakReference<>(obj);
+
+        // obj still has a strong reference, and weakRef is a weak reference
+        obj = null; // Now, obj has only the weak reference holding it
+
+        // The garbage collector may collect the object in the next cycle, regardless of memory availability
+    }
+}
+
+
+unreachable
+
+Object obj = new Object();
+WeakReference<Object> weakRef = new WeakReference<>(obj);
+obj = null; // obj becomes unreachable

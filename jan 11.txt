@@ -13,9 +13,17 @@
   },
   "aggs": {
     "max_sequence_per_process": {
-      "terms": {
-        "field": "key",
-        "size": 10000
+      "composite": {
+        "size": 10000,
+        "sources": [
+          {
+            "key": {
+              "terms": {
+                "field": "key"
+              }
+            }
+          }
+        ]
       },
       "aggs": {
         "max_sequence": {

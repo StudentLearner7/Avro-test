@@ -11,6 +11,20 @@
       ]
     }
   },
+  "collapse": {
+    "field": "key.keyword",
+    "inner_hits": {
+      "name": "max_sequence_doc",
+      "size": 1,
+      "sort": [
+        {
+          "sequence": {
+            "order": "desc"
+          }
+        }
+      ]
+    }
+  },
   "sort": [
     {
       "key.keyword": {

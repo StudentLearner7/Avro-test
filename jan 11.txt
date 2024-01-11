@@ -15,9 +15,14 @@
     "max_sequence_per_process": {
       "terms": {
         "field": "processInstanceKey",
-        "size": 10
+        "size": 10000
       },
       "aggs": {
+        "max_sequence": {
+          "max": {
+            "field": "sequence"
+          }
+        },
         "top_hit": {
           "top_hits": {
             "size": 1,

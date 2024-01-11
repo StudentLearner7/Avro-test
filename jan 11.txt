@@ -1,0 +1,29 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "value.flowScopeKey": -1
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "max_sequence_per_process": {
+      "terms": {
+        "field": "processInstanceKey",
+        "size": 10  // Set to a value that accommodates the number of unique processInstanceKeys you have
+      },
+      "aggs": {
+        "max_sequence": {
+          "max": {
+            "field": "sequence"
+          }
+        }
+      }
+    }
+  }
+}

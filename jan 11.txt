@@ -1,5 +1,5 @@
 {
-  "size": 0,
+  "size": 10000,
   "query": {
     "bool": {
       "must": [
@@ -11,35 +11,14 @@
       ]
     }
   },
-  "aggs": {
-    "max_sequence_per_process": {
-      "terms": {
-        "field": "key",
-        "size": 10000,
-        "order": {
-          "max_sequence": "desc"
-        }
+  "sort": [
+    {
+      "key.keyword": {
+        "order": "asc"
       },
-      "aggs": {
-        "max_sequence": {
-          "max": {
-            "field": "sequence"
-          }
-        },
-        "top_hit": {
-          "top_hits": {
-            "size": 1,
-            "_source": ["key", "sequence", "value"],
-            "sort": [
-              {
-                "sequence": {
-                  "order": "desc"
-                }
-              }
-            ]
-          }
-        }
+      "sequence": {
+        "order": "desc"
       }
     }
-  }
+  ]
 }

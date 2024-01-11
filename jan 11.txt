@@ -13,17 +13,12 @@
   },
   "aggs": {
     "max_sequence_per_process": {
-      "composite": {
+      "terms": {
+        "field": "key",
         "size": 10000,
-        "sources": [
-          {
-            "key": {
-              "terms": {
-                "field": "key"
-              }
-            }
-          }
-        ]
+        "order": {
+          "max_sequence": "desc"
+        }
       },
       "aggs": {
         "max_sequence": {
@@ -31,10 +26,17 @@
             "field": "sequence"
           }
         },
-        "documents": {
+        "top_hit": {
           "top_hits": {
             "size": 1,
-            "_source": ["key", "sequence", "value"]
+            "_source": ["key", "sequence", "value"],
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              }
+            ]
           }
         }
       }

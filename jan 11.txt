@@ -26,7 +26,7 @@
             "field": "sequence"
           }
         },
-        "top_hit": {
+        "documents": {
           "top_hits": {
             "size": 1,
             "sort": [

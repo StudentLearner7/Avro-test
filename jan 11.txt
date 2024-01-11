@@ -15,10 +15,7 @@
     "max_sequence_per_process": {
       "terms": {
         "field": "key",
-        "size": 10000,
-        "order": {
-          "max_sequence": "desc"
-        }
+        "size": 10000
       },
       "aggs": {
         "max_sequence": {
@@ -29,13 +26,7 @@
         "documents": {
           "top_hits": {
             "size": 1,
-            "sort": [
-              {
-                "sequence": {
-                  "order": "desc"
-                }
-              }
-            ]
+            "_source": ["key", "sequence", "value"]
           }
         }
       }

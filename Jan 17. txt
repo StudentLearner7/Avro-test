@@ -35,8 +35,19 @@
     {
       "label": "ConnectorId",
       "type": "Hidden",
-      "value": "my.custom.email.connector"
+      "value": "my.custom.email.connector",
+      "binding": {
+        "type": "property",
+        "name": "connectorId"
+      }
     }
+  ],
+  "groups": [
+    {
+      "label": "Email Configuration",
+      "properties": ["recipient", "subject", "message"]
+    }
+    // Add more groups and properties as needed
   ],
   "scopes": {
     "camunda:Connector": {
@@ -62,6 +73,7 @@
     }
   }
 }
+
 
 
 import org.camunda.connect.spi.Connector;

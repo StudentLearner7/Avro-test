@@ -1,0 +1,32 @@
+{
+  "name": "Send Email",
+  "id": "my.custom.email.connector",
+  "inputs": [
+    {"name": "recipient", "label": "Recipient"},
+    {"name": "subject", "label": "Subject"},
+    {"name": "message", "label": "Message"}
+  ]
+}
+
+import org.camunda.connect.spi.Connector;
+import org.camunda.connect.spi.ConnectorResponse;
+
+public class EmailConnector implements Connector<ConnectorRequest> {
+
+    @Override
+    public ConnectorResponse execute(ConnectorRequest request) {
+        // Logic to send an email
+        String recipient = request.getRequestParameter("recipient");
+        String subject = request.getRequestParameter("subject");
+        String message = request.getRequestParameter("message");
+
+        // Use JavaMail API or similar to send the email
+
+        return null; // Implement and return a suitable ConnectorResponse
+    }
+
+    // Other required methods...
+}
+
+
+

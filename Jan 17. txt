@@ -1,12 +1,68 @@
 {
   "name": "Send Email",
   "id": "my.custom.email.connector",
-  "inputs": [
-    {"name": "recipient", "label": "Recipient"},
-    {"name": "subject", "label": "Subject"},
-    {"name": "message", "label": "Message"}
-  ]
+  "appliesTo": [
+    "bpmn:ServiceTask"
+  ],
+  "properties": [
+    {
+      "label": "Recipient",
+      "type": "String",
+      "value": "",
+      "binding": {
+        "type": "connectorInput",
+        "name": "recipient"
+      }
+    },
+    {
+      "label": "Subject",
+      "type": "String",
+      "value": "",
+      "binding": {
+        "type": "connectorInput",
+        "name": "subject"
+      }
+    },
+    {
+      "label": "Message",
+      "type": "String",
+      "value": "",
+      "binding": {
+        "type": "connectorInput",
+        "name": "message"
+      }
+    },
+    {
+      "label": "ConnectorId",
+      "type": "Hidden",
+      "value": "my.custom.email.connector"
+    }
+  ],
+  "scopes": {
+    "camunda:Connector": {
+      "properties": {
+        "connectorId": "my.custom.email.connector",
+        "inputOutput": {
+          "inputParameters": [
+            {
+              "name": "recipient",
+              "value": "${recipient}"
+            },
+            {
+              "name": "subject",
+              "value": "${subject}"
+            },
+            {
+              "name": "message",
+              "value": "${message}"
+            }
+          ]
+        }
+      }
+    }
+  }
 }
+
 
 import org.camunda.connect.spi.Connector;
 import org.camunda.connect.spi.ConnectorResponse;

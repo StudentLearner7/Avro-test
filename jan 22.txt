@@ -1,0 +1,53 @@
+@Configuration
+@Profile("zeebeOne")
+public class ZeebeOneConfig {
+
+    @Bean
+    public ZeebeClient zeebeClientOne() {
+        return ZeebeClient.newClientBuilder()
+                // Configuration for the first Zeebe cluster
+                .gatewayAddress("zeebe-cluster-one-address:port")
+                .usePlaintext()
+                .build();
+    }
+}
+
+@Configuration
+@Profile("zeebeTwo")
+public class ZeebeTwoConfig {
+
+    @Bean
+    public ZeebeClient zeebeClientTwo() {
+        return ZeebeClient.newClientBuilder()
+                // Configuration for the second Zeebe cluster
+                .gatewayAddress("zeebe-cluster-two-address:port")
+                .usePlaintext()
+                .build();
+    }
+}
+
+
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+import io.camunda.zeebe.spring.client.annotation.JobWorker;
+import io.camunda.zeebe.client.api.response.ActivatedJob;
+
+@Component
+@Profile("zeebeOne")
+public class JobHandlersForZeebeOne {
+
+    @JobWorker(type = "type1", autoComplete = true)
+    public void handleTypeOneJobs(final ActivatedJob job) {
+        // Logic to handle type1 jobs from zeebeClientOne
+    }
+}
+
+@Component
+@Profile("zeebeTwo")
+public class JobHandlersForZeebeTwo {
+
+    @JobWorker(type = "type2", autoComplete = true)
+    public void handleTypeTwoJobs(final ActivatedJob job) {
+        // Logic to handle type2 jobs from zeebeClientTwo
+    }
+}

@@ -1,4 +1,5 @@
 {
+  "size": 0,
   "query": {
     "bool": {
       "must": [
@@ -15,29 +16,39 @@
       ]
     }
   },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
-      }
-    },
-    {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
-        },
-        "order": "desc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10000
+      },
+      "aggs": {
+        "top_sequence": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              },
+              {
+                "_script": {
+                  "type": "number",
+                  "script": {
+                    "lang": "painless",
+                    "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+                  },
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1,
+            "_source": {
+              "includes": ["*"]
+            }
+          }
+        }
       }
     }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1
-    }
-  },
-  "size": 10000
+  }
 }

@@ -1,29 +1,54 @@
 {
+  "size": 0,
   "query": {
     "bool": {
-      "filter": [
+      "must": [
+        {
+          "match": {
+            "value.bpmnElementType": "PROCESS"
+          }
+        },
         {
           "wildcard": {
-            "value.bpmnProcessId": "*"
+            "value.bpmnProcessId": "Demo*"
           }
         }
       ]
     }
   },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
-      }
-    }
-  ],
-  "size": 1,
-  "_source": true,
-  "script_fields": {
-    "is_element_activated": {
-      "script": {
-        "lang": "painless",
-        "source": "doc['intent'].size() != 0 && doc['intent'].value == 'ELEMENT_ACTIVATED'"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10000
+      },
+      "aggs": {
+        "top_record_by_intent_and_sequence": {
+          "scripted_metric": {
+            "init_script": "state.docs = []",
+            "map_script": """
+              String intent = doc['intent.keyword'].size() != 0 ? doc['intent.keyword'].value : '';
+              Map docData = new HashMap();
+              docData.put('key', doc['key'].value);
+              docData.put('sequence', doc['sequence'].value);
+              docData.put('intent', intent);
+              state.docs.add(docData);
+            """,
+            "combine_script": "return state.docs",
+            "reduce_script": """
+              Map highest = new HashMap();
+              for (state in states) {
+                for (doc in state) {
+                  boolean isHigherSequence = !highest.containsKey(doc['key']) || highest.get(doc['key'])['sequence'] < doc['sequence'];
+                  if (isHigherSequence && doc['intent'] == 'ELEMENT_ACTIVATED') {
+                    highest.put(doc['key'], doc);
+                  }
+                }
+              }
+              return highest.values();
+            """
+          }
+        }
       }
     }
   }

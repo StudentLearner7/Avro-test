@@ -23,27 +23,28 @@
         "size": 10000
       },
       "aggs": {
-        "top_hit": {
-          "top_hits": {
-            "sort": [
-              {
-                "sequence": {
-                  "order": "desc"
+        "activated_filter": {
+          "filter": {
+            "term": {
+              "intent": "activated"
+            }
+          },
+          "aggs": {
+            "top_activated_sequence": {
+              "top_hits": {
+                "sort": [
+                  {
+                    "sequence": {
+                      "order": "desc"
+                    }
+                  }
+                ],
+                "size": 1,
+                "_source": {
+                  "includes": ["key", "sequence", "intent", "value.bpmnProcessId", "value.bpmnElementType"]
                 }
               }
-            ],
-            "size": 1,
-            "_source": {
-              "includes": ["key", "sequence", "intent", "value.bpmnProcessId", "value.bpmnElementType"]
             }
-          }
-        },
-        "filter_for_activated": {
-          "bucket_selector": {
-            "buckets_path": {
-              "topHitIntent": "top_hit>hits.hits._source.intent"
-            },
-            "script": "params.topHitIntent.size() > 0 && params.topHitIntent[0] == 'activated'"
           }
         }
       }

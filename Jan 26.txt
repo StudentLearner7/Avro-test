@@ -15,7 +15,6 @@
       ]
     }
   },
-  "size": 0,
   "aggs": {
     "group_by_key": {
       "terms": {
@@ -32,8 +31,12 @@
                 docData.put('key', doc['key'].value);
                 docData.put('sequence', doc['sequence'].value);
                 docData.put('intent', doc['intent.keyword'].value);
-                docData.put('bpmnProcessId', doc.containsKey('value.bpmnProcessId.keyword') ? doc['value.bpmnProcessId.keyword'].value : null);
-                docData.put('bpmnElementType', doc.containsKey('value.bpmnElementType.keyword') ? doc['value.bpmnElementType.keyword'].value : null);
+                if (doc.containsKey('value.bpmnProcessId.keyword')) {
+                  docData.put('bpmnProcessId', doc['value.bpmnProcessId.keyword'].value);
+                }
+                if (doc.containsKey('value.bpmnElementType.keyword')) {
+                  docData.put('bpmnElementType', doc['value.bpmnElementType.keyword'].value);
+                }
                 state.docs.add(docData);
               }
             """,
@@ -53,5 +56,6 @@
         }
       }
     }
-  }
+  },
+  "size": 0
 }

@@ -1,0 +1,40 @@
+{
+  "size": 0,
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key"
+      },
+      "aggs": {
+        "max_sequence": {
+          "max": {
+            "field": "sequence"
+          }
+        },
+        "sequence_bucket_filter": {
+          "bucket_selector": {
+            "buckets_path": {
+              "maxSeq": "max_sequence"
+            },
+            "script": "params.maxSeq != null"
+          }
+        },
+        "top_hits_filter": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1,
+            "_source": {
+              "includes": ["key", "sequence", "intent"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,12 +20,22 @@
       "sequence": {
         "order": "desc"
       }
+    },
+    {
+      "_script": {
+        "type": "number",
+        "script": {
+          "lang": "painless",
+          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+        },
+        "order": "desc"
+      }
     }
   ],
   "collapse": {
     "field": "key",
     "inner_hits": {
-      "name": "most_recent",
+      "name": "top_document_per_key",
       "size": 1
     }
   },

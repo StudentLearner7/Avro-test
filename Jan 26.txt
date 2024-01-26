@@ -22,23 +22,36 @@
         "size": 10000
       },
       "aggs": {
-        "top_hits_filter": {
-          "top_hits": {
-            "sort": [
-              {
-                "sequence": {
-                  "order": "desc"
+        "filter_by_intent": {
+          "scripted_metric": {
+            "init_script": "state.docs = []",
+            "map_script": """
+              if (doc['intent.keyword'].value == 'activated') {
+                state.docs.add([
+                  'key': doc['key'].value, 
+                  'sequence': doc['sequence'].value, 
+                  'intent': doc['intent.keyword'].value,
+                  'bpmnProcessId': doc['value.bpmnProcessId.keyword'].value,
+                  'bpmnElementType': doc['value.bpmnElementType.keyword'].value
+                ])
+              }
+            """,
+            "combine_script": "return state.docs",
+            "reduce_script": """
+              Map highest = [:];
+              for (state in states) {
+                for (doc in state) {
+                  if (!highest.containsKey(doc['key']) || highest[doc['key']]['sequence'] < doc['sequence']) {
+                    highest.put(doc['key'], doc);
+                  }
                 }
               }
-            ],
-            "size": 1,
-            "_source": {
-              "includes": ["key", "sequence", "intent", "value.bpmnProcessId", "value.bpmnElementType"]
-            }
+              return highest.values();
+            """
           }
         }
       }
     }
   },
-  "size": 10000
+  "size": 0
 }

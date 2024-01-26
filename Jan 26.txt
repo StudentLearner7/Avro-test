@@ -3,18 +3,23 @@
     "bool": {
       "must": [
         {
-          "prefix": {
-            "value.bpmnProcessId": "Demo"
+          "wildcard": {
+            "value.bpmnProcessId": "*"
+          }
+        },
+        {
+          "match": {
+            "value.bpmnElementType": "PROCESS"
           }
         }
       ]
     }
   },
-  "size": 0,
   "aggs": {
     "group_by_key": {
       "terms": {
-        "field": "key"
+        "field": "key",
+        "size": 10000
       },
       "aggs": {
         "top_hits_filter": {
@@ -27,20 +32,13 @@
               }
             ],
             "size": 1,
-            "script_fields": {
-              "is_intent_activated": {
-                "script": {
-                  "lang": "painless",
-                  "source": "doc['intent'].value == 'activated'"
-                }
-              }
-            },
             "_source": {
-              "includes": ["key", "sequence", "intent", "value.bpmnProcessId"]
+              "includes": ["key", "sequence", "intent", "value.bpmnProcessId", "value.bpmnElementType"]
             }
           }
         }
       }
     }
-  }
+  },
+  "size": 10000
 }

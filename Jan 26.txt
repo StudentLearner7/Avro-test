@@ -15,6 +15,7 @@
       ]
     }
   },
+  "size": 0,
   "aggs": {
     "group_by_key": {
       "terms": {
@@ -26,22 +27,22 @@
           "scripted_metric": {
             "init_script": "state.docs = []",
             "map_script": """
-              if (doc['intent.keyword'].value == 'activated') {
-                state.docs.add([
-                  'key': doc['key'].value, 
-                  'sequence': doc['sequence'].value, 
-                  'intent': doc['intent.keyword'].value,
-                  'bpmnProcessId': doc['value.bpmnProcessId.keyword'].value,
-                  'bpmnElementType': doc['value.bpmnElementType.keyword'].value
-                ])
+              if (doc['intent.keyword'].size() != 0 && doc['intent.keyword'].value == 'activated') {
+                Map docData = new HashMap();
+                docData.put('key', doc['key'].value);
+                docData.put('sequence', doc['sequence'].value);
+                docData.put('intent', doc['intent.keyword'].value);
+                docData.put('bpmnProcessId', doc.containsKey('value.bpmnProcessId.keyword') ? doc['value.bpmnProcessId.keyword'].value : null);
+                docData.put('bpmnElementType', doc.containsKey('value.bpmnElementType.keyword') ? doc['value.bpmnElementType.keyword'].value : null);
+                state.docs.add(docData);
               }
             """,
             "combine_script": "return state.docs",
             "reduce_script": """
-              Map highest = [:];
+              Map highest = new HashMap();
               for (state in states) {
                 for (doc in state) {
-                  if (!highest.containsKey(doc['key']) || highest[doc['key']]['sequence'] < doc['sequence']) {
+                  if (!highest.containsKey(doc['key']) || highest.get(doc['key'])['sequence'] < doc['sequence']) {
                     highest.put(doc['key'], doc);
                   }
                 }
@@ -52,6 +53,5 @@
         }
       }
     }
-  },
-  "size": 0
+  }
 }

@@ -18,11 +18,12 @@
     }
   ],
   "size": 1,
+  "_source": true,
   "script_fields": {
     "is_element_activated": {
       "script": {
         "lang": "painless",
-        "source": "doc['intent'].value == 'ELEMENT_ACTIVATED'"
+        "source": "doc['intent'].size() != 0 && doc['intent'].value == 'ELEMENT_ACTIVATED'"
       }
     }
   }

@@ -11,28 +11,43 @@
           "match": {
             "value.bpmnElementType": "PROCESS"
           }
-        },
-        {
-          "match": {
-            "intent": "activated"
-          }
         }
       ]
     }
   },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10000
+      },
+      "aggs": {
+        "top_sequence": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1,
+            "_source": {
+              "includes": ["key", "sequence", "intent", "value.bpmnProcessId", "value.bpmnElementType"]
+            }
+          }
+        },
+        "filter_activated": {
+          "bucket_selector": {
+            "buckets_path": {
+              "sequence": "top_sequence.hits.hits._source.sequence",
+              "intent": "top_sequence.hits.hits._source.intent"
+            },
+            "script": "params.intent == 'activated'"
+          }
+        }
       }
     }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_hit_per_key",
-      "size": 1
-    }
   },
-  "size": 10000
+  "size": 0
 }

@@ -2,7 +2,7 @@
   "size": 0,
   "query": {
     "bool": {
-      "filter": [
+      "must": [
         {
           "wildcard": {
             "value.bpmnProcessId": "Demo*"
@@ -16,49 +16,28 @@
       ]
     }
   },
-  "aggs": {
-    "group_by_key": {
-      "terms": {
-        "field": "key",
-        "size": 10000
-      },
-      "aggs": {
-        "activated_only": {
-          "filter": {
-            "term": {
-              "intent": "ELEMENT_ACTIVATED"
-            }
-          },
-          "aggs": {
-            "highest_sequence": {
-              "max": {
-                "field": "sequence"
-              }
-            }
-          }
+  "sort": [
+    {
+      "_script": {
+        "type": "number",
+        "script": {
+          "lang": "painless",
+          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 0 : 1"
         },
-        "top_sequence_docs": {
-          "top_hits": {
-            "sort": [
-              {
-                "sequence": {
-                  "order": "desc"
-                }
-              }
-            ],
-            "size": 1
-          }
-        },
-        "filter_top_sequence": {
-          "bucket_selector": {
-            "buckets_path": {
-              "highestSeq": "activated_only.highest_sequence",
-              "actualSeq": "top_sequence_docs.hits.hits._source.sequence"
-            },
-            "script": "params.highestSeq == params.actualSeq"
-          }
-        }
+        "order": "asc"
       }
+    },
+    {
+      "sequence": {
+        "order": "desc"
+      }
+    }
+  ],
+  "collapse": {
+    "field": "key",
+    "inner_hits": {
+      "name": "top_document_per_key",
+      "size": 1
     }
   }
 }

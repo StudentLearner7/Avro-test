@@ -29,24 +29,19 @@
     "inner_hits": {
       "name": "top_document_per_key",
       "size": 1,
-      "_source": ["key", "sequence", "intent"],
       "sort": [
-        {
-          "_script": {
-            "type": "number",
-            "script": {
-              "lang": "painless",
-              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
-            },
-            "order": "desc"
-          }
-        },
         {
           "sequence": {
             "order": "desc"
           }
         }
-      ]
+      ],
+      "_source": ["key", "sequence", "intent"],
+      "query": {
+        "match": {
+          "intent": "ELEMENT_ACTIVATED"
+        }
+      }
     }
   }
 }

@@ -19,23 +19,17 @@
   },
   "sort": [
     {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": """
-            if (doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED')) {
-              return doc['sequence'].value;
-            } else {
-              return -1;
-            }
-          """
-        },
+      "sequence": {
         "order": "desc"
       }
     },
     {
-      "sequence": {
+      "_script": {
+        "type": "number",
+        "script": {
+          "lang": "painless",
+          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+        },
         "order": "desc"
       }
     }

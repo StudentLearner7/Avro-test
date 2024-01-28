@@ -1,59 +1,56 @@
 {
-  "size": 10000,
+  "size": 0,
   "query": {
-    "function_score": {
-      "query": {
-        "bool": {
-          "must": [
-            {
-              "wildcard": {
-                "value.bpmnProcessId": "Demo*"
-              }
-            },
-            {
-              "match": {
-                "value.bpmnElementType": "PROCESS"
-              }
-            }
-          ]
-        }
-      },
-      "functions": [
+    "bool": {
+      "must": [
         {
-          "filter": {
-            "term": {
-              "intent": "ELEMENT_ACTIVATED"
-            }
-          },
-          "weight": 2
+          "wildcard": {
+            "value.bpmnProcessId": "Demo*"
+          }
+        },
+        {
+          "match": {
+            "value.bpmnElementType": "PROCESS"
+          }
         }
-      ],
-      "score_mode": "max",
-      "boost_mode": "replace"
+      ]
     }
   },
-  "sort": [
-    {
-      "key": {
-        "order": "asc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10000
+      },
+      "aggs": {
+        "custom_processing": {
+          "scripted_metric": {
+            "init_script": "state.docs = []",
+            "map_script": """
+              Map docData = new HashMap();
+              docData.put('sequence', doc['sequence'].value);
+              docData.put('intent', doc['intent'].keyword.value);
+              docData.put('source', params['_source']);
+              state.docs.add(docData);
+            """,
+            "combine_script": "return state.docs",
+            "reduce_script": """
+              Map highestDocs = new HashMap();
+              for (state in states) {
+                for (doc in state) {
+                  if (!highestDocs.containsKey(doc['key']) || 
+                      highestDocs.get(doc['key']).get('sequence') < doc.get('sequence')) {
+                    if (doc.get('intent').equals('ELEMENT_ACTIVATED')) {
+                      highestDocs.put(doc.get('key'), doc);
+                    }
+                  }
+                }
+              }
+              return highestDocs.values();
+            """
+          }
+        }
       }
-    },
-    {
-      "sequence": {
-        "order": "desc"
-      }
-    },
-    {
-      "_score": {
-        "order": "desc"
-      }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1
     }
   }
 }

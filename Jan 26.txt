@@ -29,10 +29,11 @@
         "script": {
           "lang": "painless",
           "source": """
-            if (doc['intent'].value == 'ELEMENT_ACTIVATED') {
-              return 1;
+            if (doc['intent'].size() == 0) return 0;
+            if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
+              return 2;
             } else {
-              return 0;
+              return 1;
             }
           """
         },

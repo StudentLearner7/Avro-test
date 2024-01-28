@@ -1,6 +1,5 @@
 {
-  "size": 10,
-  "from": 0,
+  "size": 0,
   "query": {
     "bool": {
       "must": [
@@ -17,29 +16,36 @@
       ]
     }
   },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
-      }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1,
-      "sort": [
-        {
-          "sequence": {
-            "order": "desc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10
+      },
+      "aggs": {
+        "top_sequence_hits": {
+          "top_hits": {
+            "sort": [
+              {
+                "_script": {
+                  "type": "number",
+                  "script": {
+                    "lang": "painless",
+                    "source": """
+                      if (doc['intent'].value == 'ELEMENT_ACTIVATED') {
+                        return doc['sequence'].value;
+                      } else {
+                        return -1;
+                      }
+                    """
+                  },
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1,
+            "_source": ["key", "sequence", "intent"]
           }
-        }
-      ],
-      "_source": ["key", "sequence", "intent"],
-      "query": {
-        "match": {
-          "intent": "ELEMENT_ACTIVATED"
         }
       }
     }

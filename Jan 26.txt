@@ -19,22 +19,14 @@
   },
   "sort": [
     {
-      "sequence": {
-        "order": "desc"
-      }
-    },
-    {
       "_script": {
         "type": "number",
         "script": {
           "lang": "painless",
           "source": """
-            if (doc['intent'].size() == 0) return 0;
-            if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
-              return 2;
-            } else {
-              return 1;
-            }
+            long sequence = doc['sequence'].value;
+            boolean isElementActivated = doc['intent'].value.equals('ELEMENT_ACTIVATED');
+            return (sequence * 10) + (isElementActivated ? 1 : 0);
           """
         },
         "order": "desc"

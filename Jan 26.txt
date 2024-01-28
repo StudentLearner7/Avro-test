@@ -1,6 +1,5 @@
 {
-  "size": 10,
-  "from": 0,
+  "size": 0, // No top-level hits, we are only interested in the aggregations
   "query": {
     "bool": {
       "must": [
@@ -17,28 +16,31 @@
       ]
     }
   },
-  "sort": [
-    {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": """
-            long sequence = doc['sequence'].value;
-            boolean isElementActivated = doc['intent'].value.equals('ELEMENT_ACTIVATED');
-            return (sequence * 10) + (isElementActivated ? 1 : 0);
-          """
-        },
-        "order": "desc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10 // Adjust size as per your pagination needs
+      },
+      "aggs": {
+        "top_docs": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              },
+              {
+                "intent": {
+                  "order": "desc" // This assumes 'ELEMENT_ACTIVATED' is higher in alphabetical order than other intents
+                }
+              }
+            ],
+            "size": 1
+          }
+        }
       }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1,
-      "_source": ["key", "sequence", "intent"]
     }
   }
 }

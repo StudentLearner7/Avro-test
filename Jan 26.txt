@@ -1,34 +1,50 @@
 {
-  "size": 0,
+  "size": 10000,
   "query": {
-    "bool": {
-      "must": [
-        {
-          "wildcard": {
-            "value.bpmnProcessId": "Demo*"
-          }
-        },
-        {
-          "match": {
-            "value.bpmnElementType": "PROCESS"
-          }
+    "function_score": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "wildcard": {
+                "value.bpmnProcessId": "Demo*"
+              }
+            },
+            {
+              "match": {
+                "value.bpmnElementType": "PROCESS"
+              }
+            }
+          ]
         }
-      ]
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "intent": "ELEMENT_ACTIVATED"
+            }
+          },
+          "weight": 2
+        }
+      ],
+      "score_mode": "max",
+      "boost_mode": "replace"
     }
   },
   "sort": [
     {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 0 : 1"
-        },
+      "key": {
         "order": "asc"
       }
     },
     {
       "sequence": {
+        "order": "desc"
+      }
+    },
+    {
+      "_score": {
         "order": "desc"
       }
     }

@@ -24,7 +24,7 @@
         "script": {
           "lang": "painless",
           "source": """
-            if (doc.containsKey('intent') && doc['intent'].size() != 0) {
+            if (doc['intent'].size() != 0) {
               if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
                 return doc['sequence'].value;
               } else {

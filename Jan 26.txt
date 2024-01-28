@@ -19,17 +19,27 @@
   },
   "sort": [
     {
-      "sequence": {
-        "order": "desc"
-      }
-    },
-    {
       "_script": {
         "type": "number",
         "script": {
           "lang": "painless",
-          "source": "doc['intent.keyword'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+          "source": """
+            if (doc.containsKey('intent') && doc['intent'].size() != 0) {
+              if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
+                return doc['sequence'].value;
+              } else {
+                return 0;
+              }
+            } else {
+              return 0;
+            }
+          """
         },
+        "order": "desc"
+      }
+    },
+    {
+      "sequence": {
         "order": "desc"
       }
     }
@@ -38,7 +48,8 @@
     "field": "key",
     "inner_hits": {
       "name": "top_document_per_key",
-      "size": 1
+      "size": 1,
+      "_source": ["key", "sequence", "intent"]
     }
   }
 }

@@ -1,39 +1,33 @@
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.opensearch.core.OpenSearchRestTemplate;
 import org.springframework.data.opensearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.opensearch.core.SearchHits;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.aggregations.AggregationBuilders;
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.opensearch.search.aggregations.bucket.terms.Terms;
+// Other necessary imports
 
-// ...
+public class YourService {
 
-@Autowired
-private OpenSearchRestTemplate openSearchRestTemplate;
+    @Autowired
+    private OpenSearchRestTemplate openSearchRestTemplate;
 
-public void findDuplicateRecords() {
-    // Define the terms aggregation
-    TermsAggregationBuilder termsAggregation = AggregationBuilders
-        .terms("duplicate_record")
-        .field("Id");
+    public void findDuplicateRecords() {
+        // Define the terms aggregation
+        TermsAggregationBuilder termsAggregation = AggregationBuilders
+            .terms("duplicate_record")
+            .field("Id");
 
-    // Build the query
-    NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
-        .withQuery(QueryBuilders.matchAllQuery())
-        .addAggregation(termsAggregation)
-        .withIndices("index1", "index2");
+        // Build the query
+        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
+            .withQuery(QueryBuilders.matchAllQuery())
+            .addAggregation(termsAggregation)
+            .withIndices("index1", "index2")
+            .withPageable(PageRequest.of(0, 0)); // To replicate "size": 0 in the query
 
-    // Execute the query
-    NativeSearchQuery searchQuery = queryBuilder.build();
-    SearchHits<?> searchHits = openSearchRestTemplate.search(searchQuery, YourEntity.class);
+        // Execute the query
+        SearchHits<?> searchHits = openSearchRestTemplate.search(queryBuilder.build(), YourEntity.class);
 
-    // Process the results
-    Terms terms = searchHits.getAggregations().get("duplicate_record");
-    for (Terms.Bucket bucket : terms.getBuckets()) {
-        if (bucket.getDocCount() == 2) { // Manually checking the condition
-            // Process each bucket that meets the condition
-            System.out.println("Duplicate ID: " + bucket.getKeyAsString());
-        }
+        // Process the results
+        // Note: Manual processing might be required to filter the buckets as per the "doc_count == 2" condition.
     }
 }

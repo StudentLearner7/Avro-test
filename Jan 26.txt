@@ -17,8 +17,13 @@
       ],
       "should": [
         {
-          "match": {
-            "intent": "ELEMENT_ACTIVATED"
+          "script_score": {
+            "query": {
+              "match_all": {}
+            },
+            "script": {
+              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 2 : 1"
+            }
           }
         }
       ],
@@ -30,7 +35,8 @@
       "sequence": {
         "order": "desc"
       }
-    }
+    },
+    "_score"
   ],
   "collapse": {
     "field": "key",

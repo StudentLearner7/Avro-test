@@ -1,56 +1,35 @@
 {
-  "size": 10,
-  "from": 0,
-  "query": {
-    "function_score": {
-      "query": {
-        "bool": {
-          "must": [
-            {
-              "wildcard": {
-                "value.bpmnProcessId": "Demo*"
-              }
-            },
-            {
-              "match": {
-                "value.bpmnElementType": "PROCESS"
-              }
-            }
-          ]
-        }
+  "size": 0,
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10
       },
-      "functions": [
-        {
-          "filter": {
-            "match": {
-              "intent": "ELEMENT_ACTIVATED"
-            }
-          },
-          "weight": 1.1
+      "aggs": {
+        "top_docs": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              },
+              {
+                "_script": {
+                  "type": "number",
+                  "script": {
+                    "lang": "painless",
+                    "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+                  },
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1
+          }
         }
-      ],
-      "score_mode": "sum",
-      "boost_mode": "replace"
-    }
-  },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
       }
-    },
-    {
-      "_score": {
-        "order": "desc"
-      }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1,
-      "_source": ["key", "sequence", "intent"]
     }
   }
 }

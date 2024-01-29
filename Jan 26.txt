@@ -1,33 +1,40 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.opensearch.core.OpenSearchRestTemplate;
-import org.springframework.data.opensearch.core.query.NativeSearchQueryBuilder;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.aggregations.AggregationBuilders;
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-// Other necessary imports
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class YourService {
 
     @Autowired
-    private OpenSearchRestTemplate openSearchRestTemplate;
+    private RestHighLevelClient restHighLevelClient;
 
-    public void findDuplicateRecords() {
+    public void findDuplicateRecords() throws IOException {
         // Define the terms aggregation
         TermsAggregationBuilder termsAggregation = AggregationBuilders
             .terms("duplicate_record")
             .field("Id");
 
-        // Build the query
-        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
-            .withQuery(QueryBuilders.matchAllQuery())
-            .addAggregation(termsAggregation)
-            .withIndices("index1", "index2")
-            .withPageable(PageRequest.of(0, 0)); // To replicate "size": 0 in the query
+        // Building the search source
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+            .query(QueryBuilders.matchAllQuery())
+            .aggregation(termsAggregation)
+            .size(0); // Equivalent to "size": 0 in the original query
 
-        // Execute the query
-        SearchHits<?> searchHits = openSearchRestTemplate.search(queryBuilder.build(), YourEntity.class);
+        // Create the SearchRequest
+        SearchRequest searchRequest = new SearchRequest()
+            .indices("index1", "index2")
+            .source(searchSourceBuilder);
+
+        // Execute the search request
+        var response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
 
         // Process the results
-        // Note: Manual processing might be required to filter the buckets as per the "doc_count == 2" condition.
+        // Manual processing may be needed to filter the buckets as per the "doc_count == 2" condition.
     }
 }

@@ -1,20 +1,24 @@
 {
-  "size": 0,  // No need for the actual documents
   "aggs": {
-    "group_by_field": {
+    "key_count": {
       "terms": {
-        "field": "your_field_name",
-        "size": 10  // Adjust the size as needed
+        "field": "key",
+        "size": 1000
       },
       "aggs": {
-        "count_filter": {
-          "bucket_selector": {
-            "buckets_path": {
-              "count": "_count"
-            },
-            "script": "params.count == 2"
+        "max_doc_count": {
+          "max_bucket": {
+            "buckets_path": "key_count._count"
           }
         }
+      }
+    },
+    "max_doc_count_filter": {
+      "bucket_selector": {
+        "buckets_path": {
+          "maxDocCount": "key_count>max_doc_count.value"
+        },
+        "script": "params.maxDocCount <= 2"
       }
     }
   }

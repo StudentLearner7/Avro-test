@@ -1,14 +1,37 @@
 {
   "size": 0,
   "aggs": {
-    "group_by_field": {
-      "terms": {
-        "field": "your_field_name",
-        "size": 10000,
-        "min_doc_count": 2,
-        "script": {
-          "source": "if (_count == 2) { return 'keep'; } else { return 'discard'; }"
-        }
+    "custom_doc_count": {
+      "scripted_metric": {
+        "init_script": "state.docs = [:]",
+        "map_script": """
+          String key = doc['your_field_name'].value;
+          if (state.docs.containsKey(key)) {
+            state.docs[key] += 1;
+          } else {
+            state.docs[key] = 1;
+          }
+        """,
+        "combine_script": "return state.docs",
+        "reduce_script": """
+          Map finalCounts = [:];
+          for (state in states) {
+            for (entry in state.entrySet()) {
+              if (finalCounts.containsKey(entry.getKey())) {
+                finalCounts[entry.getKey()] += entry.getValue();
+              } else {
+                finalCounts[entry.getKey()] = entry.getValue();
+              }
+            }
+          }
+          Map result = [:];
+          for (entry in finalCounts.entrySet()) {
+            if (entry.getValue() == 2) {
+              result[entry.getKey()] = entry.getValue();
+            }
+          }
+          return result;
+        """
       }
     }
   }

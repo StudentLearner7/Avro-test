@@ -1,24 +1,28 @@
 {
+  "size": 10,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "terms": {
+            "key": ["value1", "value2"]  // Add all the key values you want to filter
+        }
+      ]
+    }
+  },
   "aggs": {
     "key_count": {
       "terms": {
         "field": "key",
-        "size": 1000
-      },
-      "aggs": {
-        "max_doc_count": {
-          "max_bucket": {
-            "buckets_path": "key_count._count"
-          }
-        }
+        "size": 10  // Adjust the size as needed
       }
-    },
-    "max_doc_count_filter": {
-      "bucket_selector": {
-        "buckets_path": {
-          "maxDocCount": "key_count>max_doc_count.value"
-        },
-        "script": "params.maxDocCount <= 2"
+    }
+  },
+  "script_fields": {
+    "max_doc_count": {
+      "script": {
+        "source": "doc['key'].length",
+        "lang": "painless"
       }
     }
   }

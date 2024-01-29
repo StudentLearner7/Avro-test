@@ -4,16 +4,10 @@
     "group_by_field": {
       "terms": {
         "field": "your_field_name",
-        "size": 10
-      },
-      "aggs": {
-        "having_doc_count_2": {
-          "bucket_selector": {
-            "buckets_path": {
-              "the_doc_count": "_count"
-            },
-            "script": "params.the_doc_count == 2"
-          }
+        "size": 10000,
+        "min_doc_count": 2,
+        "script": {
+          "source": "if (_count == 2) { return 'keep'; } else { return 'discard'; }"
         }
       }
     }

@@ -1,28 +1,17 @@
 {
   "size": 0,
   "aggs": {
-    "key_intent_composite": {
-      "composite": {
-        "sources": [
-          {
-            "key_intent": {
-              "terms": {
-                "field": "key_intent",
-                "size": 10
-              }
-            }
-          }
-        ]
-      },
-      "aggs": {
-        "bucket_filter": {
-          "bucket_selector": {
-            "buckets_path": {
-              "docCount": "key_intent>_count"
-            },
-            "script": "params.docCount == 2"
-          }
-        }
+    "key_intent_terms": {
+      "terms": {
+        "field": "key_intent"
+      }
+    },
+    "bucket_filter": {
+      "bucket_selector": {
+        "buckets_path": {
+          "docCount": "key_intent_terms._count"
+        },
+        "script": "params.docCount == 2"
       }
     }
   }

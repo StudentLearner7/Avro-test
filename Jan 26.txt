@@ -1,18 +1,39 @@
-{
-  "size": 0,
-  "aggs": {
-    "key_intent_terms": {
-      "terms": {
-        "field": "key_intent"
-      }
-    },
-    "bucket_filter": {
-      "bucket_selector": {
-        "buckets_path": {
-          "docCount": "key_intent_terms._count"
-        },
-        "script": "params.docCount == 2"
-      }
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.opensearch.core.OpenSearchRestTemplate;
+import org.springframework.data.opensearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.opensearch.core.SearchHits;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+
+// ...
+
+@Autowired
+private OpenSearchRestTemplate openSearchRestTemplate;
+
+public void findDuplicateRecords() {
+    // Define the terms aggregation
+    TermsAggregationBuilder termsAggregation = AggregationBuilders
+        .terms("duplicate_record")
+        .field("Id");
+
+    // Build the query
+    NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
+        .withQuery(QueryBuilders.matchAllQuery())
+        .addAggregation(termsAggregation)
+        .withIndices("index1", "index2");
+
+    // Execute the query
+    NativeSearchQuery searchQuery = queryBuilder.build();
+    SearchHits<?> searchHits = openSearchRestTemplate.search(searchQuery, YourEntity.class);
+
+    // Process the results
+    Terms terms = searchHits.getAggregations().get("duplicate_record");
+    for (Terms.Bucket bucket : terms.getBuckets()) {
+        if (bucket.getDocCount() == 2) { // Manually checking the condition
+            // Process each bucket that meets the condition
+            System.out.println("Duplicate ID: " + bucket.getKeyAsString());
+        }
     }
-  }
 }

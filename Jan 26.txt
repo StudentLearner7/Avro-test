@@ -1,40 +1,43 @@
 {
-  "size": 100, // Increased size to ensure we have a good pool of candidates
+  "size": 10,
+  "from": 0,
   "query": {
-    "function_score": {
-      "query": {
-        "bool": {
-          "must": [
-            {
-              "wildcard": {
-                "value.bpmnProcessId": "Demo*"
-              }
-            },
-            {
-              "match": {
-                "value.bpmnElementType": "PROCESS"
-              }
-            }
-          ]
-        }
-      },
-      "functions": [
+    "bool": {
+      "must": [
         {
-          "filter": {
-            "match": {
-              "intent": "ELEMENT_ACTIVATED"
-            }
-          },
-          "weight": 2
+          "wildcard": {
+            "value.bpmnProcessId": "Demo*"
+          }
+        },
+        {
+          "match": {
+            "value.bpmnElementType": "PROCESS"
+          }
         }
       ],
-      "score_mode": "max",
-      "boost_mode": "replace"
+      "should": [
+        {
+          "script_score": {
+            "query": {
+              "match_all": {}
+            },
+            "script": {
+              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 2 : 1"
+            }
+          }
+        }
+      ],
+      "minimum_should_match": 0
     }
   },
   "sort": [
     {
-      "sequence": {
+      "_script": {
+        "type": "number",
+        "script": {
+          "lang": "painless",
+          "source": "doc['sequence'].value * 1000 + (_score)"
+        },
         "order": "desc"
       }
     }

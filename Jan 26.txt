@@ -1,37 +1,21 @@
 {
-  "size": 0,
+  "size": 0, 
   "aggs": {
-    "custom_doc_count": {
-      "scripted_metric": {
-        "init_script": "state.docs = [:]",
-        "map_script": """
-          String key = doc['your_field_name'].value;
-          if (state.docs.containsKey(key)) {
-            state.docs[key] += 1;
-          } else {
-            state.docs[key] = 1;
+    "keys_with_two_records": {
+      "terms": {
+        "field": "key",
+        "min_doc_count": 2,
+        "size": 100
+      },
+      "aggs": {
+        "bucket_selector": {
+          "bucket_selector": {
+            "buckets_path": {
+              "count": "_count"
+            },
+            "script": "params.count == 2"
           }
-        """,
-        "combine_script": "return state.docs",
-        "reduce_script": """
-          Map finalCounts = [:];
-          for (state in states) {
-            for (entry in state.entrySet()) {
-              if (finalCounts.containsKey(entry.getKey())) {
-                finalCounts[entry.getKey()] += entry.getValue();
-              } else {
-                finalCounts[entry.getKey()] = entry.getValue();
-              }
-            }
-          }
-          Map result = [:];
-          for (entry in finalCounts.entrySet()) {
-            if (entry.getValue() == 2) {
-              result[entry.getKey()] = entry.getValue();
-            }
-          }
-          return result;
-        """
+        }
       }
     }
   }

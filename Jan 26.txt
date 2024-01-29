@@ -26,25 +26,19 @@
               "intent": "ELEMENT_ACTIVATED"
             }
           },
-          "script_score": {
-            "script": {
-              "source": "doc['sequence'].value * 1000 + 1"
-            }
-          }
-        },
-        {
-          "script_score": {
-            "script": {
-              "source": "doc['sequence'].value * 1000"
-            }
-          }
+          "weight": 1.1
         }
       ],
-      "score_mode": "max",
+      "score_mode": "sum",
       "boost_mode": "replace"
     }
   },
   "sort": [
+    {
+      "sequence": {
+        "order": "desc"
+      }
+    },
     {
       "_score": {
         "order": "desc"

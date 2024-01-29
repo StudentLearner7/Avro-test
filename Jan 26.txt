@@ -2,29 +2,51 @@
   "size": 10,
   "from": 0,
   "query": {
-    "bool": {
-      "must": [
+    "function_score": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "wildcard": {
+                "value.bpmnProcessId": "Demo*"
+              }
+            },
+            {
+              "match": {
+                "value.bpmnElementType": "PROCESS"
+              }
+            }
+          ]
+        }
+      },
+      "functions": [
         {
-          "wildcard": {
-            "value.bpmnProcessId": "Demo*"
+          "filter": {
+            "match": {
+              "intent": "ELEMENT_ACTIVATED"
+            }
+          },
+          "script_score": {
+            "script": {
+              "source": "doc['sequence'].value * 1000 + 1"
+            }
           }
         },
         {
-          "match": {
-            "value.bpmnElementType": "PROCESS"
+          "script_score": {
+            "script": {
+              "source": "doc['sequence'].value * 1000"
+            }
           }
         }
-      ]
+      ],
+      "score_mode": "max",
+      "boost_mode": "replace"
     }
   },
   "sort": [
     {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": "doc['sequence'].value + (doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 0.1 : 0)"
-        },
+      "_score": {
         "order": "desc"
       }
     }

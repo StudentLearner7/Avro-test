@@ -14,20 +14,7 @@
             "value.bpmnElementType": "PROCESS"
           }
         }
-      ],
-      "should": [
-        {
-          "script_score": {
-            "query": {
-              "match_all": {}
-            },
-            "script": {
-              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 2 : 1"
-            }
-          }
-        }
-      ],
-      "minimum_should_match": 0
+      ]
     }
   },
   "sort": [
@@ -36,7 +23,7 @@
         "type": "number",
         "script": {
           "lang": "painless",
-          "source": "doc['sequence'].value * 1000 + (_score)"
+          "source": "doc['sequence'].value + (doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 0.1 : 0)"
         },
         "order": "desc"
       }

@@ -1,15 +1,18 @@
 {
   "size": 0,
   "aggs": {
-    "group_by_key": {
+    "group_by_field": {
       "terms": {
-        "field": "key",
-        "size": 1000  // Adjust based on the expected number of unique keys
+        "field": "your_field_name",
+        "size": 10
       },
       "aggs": {
-        "count": {
-          "value_count": {
-            "field": "key"
+        "having_doc_count_2": {
+          "bucket_selector": {
+            "buckets_path": {
+              "the_doc_count": "_count"
+            },
+            "script": "params.the_doc_count == 2"
           }
         }
       }

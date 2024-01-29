@@ -1,48 +1,50 @@
 {
-  "size": 10,
+  "size": 0,
   "query": {
-    "function_score": {
-      "query": {
-        "bool": {
-          "must": [
-            {
-              "wildcard": {
-                "value.bpmnProcessId": "Demo*"
-              }
-            },
-            {
-              "match": {
-                "value.bpmnElementType": "PROCESS"
-              }
-            }
-          ]
-        }
-      },
-      "functions": [
+    "bool": {
+      "must": [
         {
-          "script_score": {
-            "script": {
-              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? doc['sequence'].value * 1000 : 1"
-            }
+          "wildcard": {
+            "value.bpmnProcessId": "Demo*"
+          }
+        },
+        {
+          "match": {
+            "value.bpmnElementType": "PROCESS"
           }
         }
-      ],
-      "boost_mode": "replace"
+      ]
     }
   },
-  "sort": [
-    {
-      "_score": {
-        "order": "desc"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10
+      },
+      "aggs": {
+        "highest_sequence": {
+          "scripted_metric": {
+            "init_script": "state.docs = []",
+            "map_script": """
+              Map docData = ['sequence': doc['sequence'].value, 'intent': doc['intent'].value, 'source': params['_source']];
+              state.docs.add(docData);
+            """,
+            "combine_script": "return state.docs",
+            "reduce_script": """
+              Map highest = null;
+              for (state in states) {
+                for (doc in state) {
+                  if (highest == null || (doc['sequence'] > highest['sequence'] && doc['intent'].equals('ELEMENT_ACTIVATED'))) {
+                    highest = doc;
+                  }
+                }
+              }
+              return highest;
+            """
+          }
+        }
       }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1,
-      "_source": ["key", "sequence", "intent"]
     }
   }
 }

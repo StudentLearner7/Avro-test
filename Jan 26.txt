@@ -23,11 +23,12 @@
         {
           "script_score": {
             "script": {
+              "lang": "painless",
               "source": """
                 if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
-                  return doc['sequence'].value;
+                  return doc['sequence'].value * 1000; // Boosting the score significantly for ELEMENT_ACTIVATED
                 } else {
-                  return -1.0;
+                  return 1; // Assigning a minimal score for other intents
                 }
               """
             }

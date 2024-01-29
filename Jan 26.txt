@@ -1,6 +1,5 @@
 {
-  "size": 10,
-  "from": 0,
+  "size": 0,  // We're using aggregations, so we don't need the top-level hits.
   "query": {
     "bool": {
       "must": [
@@ -17,29 +16,37 @@
       ]
     }
   },
-  "sort": [
-    {
-      "sequence": {
-        "order": "desc"
-      }
-    },
-    {
-      "_script": {
-        "type": "number",
-        "script": {
-          "lang": "painless",
-          "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0"
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10  // Adjust this size for pagination
+      },
+      "aggs": {
+        "top_sequence_hits": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1
+          }
         },
-        "order": "desc"
+        "bucket_script_for_intent": {
+          "bucket_script": {
+            "buckets_path": {
+              "maxSequence": "top_sequence_hits>max_sequence",
+              "isElementActivated": "top_sequence_hits>max_intent"
+            },
+            "script": {
+              "source": "params.isElementActivated == 'ELEMENT_ACTIVATED' ? 1 : 0"
+            }
+          }
+        }
       }
-    }
-  ],
-  "collapse": {
-    "field": "key",
-    "inner_hits": {
-      "name": "top_document_per_key",
-      "size": 1,
-      "_source": ["key", "sequence", "intent"]
     }
   }
 }

@@ -1,6 +1,5 @@
 {
   "size": 10,
-  "from": 0,
   "query": {
     "function_score": {
       "query": {
@@ -23,19 +22,11 @@
         {
           "script_score": {
             "script": {
-              "lang": "painless",
-              "source": """
-                if (doc['intent'].value.equals('ELEMENT_ACTIVATED')) {
-                  return doc['sequence'].value * 1000; // Boosting the score significantly for ELEMENT_ACTIVATED
-                } else {
-                  return 1; // Assigning a minimal score for other intents
-                }
-              """
+              "source": "doc['intent'].value.equals('ELEMENT_ACTIVATED') ? doc['sequence'].value * 1000 : 1"
             }
           }
         }
       ],
-      "score_mode": "max",
       "boost_mode": "replace"
     }
   },

@@ -23,7 +23,7 @@
         "type": "number",
         "script": {
           "lang": "painless",
-          "source": "doc['sequence'].value + (doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 0.1 : 0)"
+          "source": "doc['sequence'].value * 1000 + (doc['intent'].value.equals('ELEMENT_ACTIVATED') ? 1 : 0)"
         },
         "order": "desc"
       }

@@ -1,14 +1,13 @@
 {
-  "size": 0, 
+  "size": 0,  // No need for the actual documents
   "aggs": {
-    "keys_with_two_records": {
+    "group_by_field": {
       "terms": {
-        "field": "key",
-        "min_doc_count": 2,
-        "size": 100
+        "field": "your_field_name",
+        "size": 10  // Adjust the size as needed
       },
       "aggs": {
-        "bucket_selector": {
+        "count_filter": {
           "bucket_selector": {
             "buckets_path": {
               "count": "_count"

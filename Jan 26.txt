@@ -1,25 +1,23 @@
 {
-  "size": 0,  // We don't need the main query hits, just the aggregation results
+  "size": 0,
   "aggs": {
-    "group_by_key": {
-      "terms": {
-        "field": "key",
-        "size": 10  // Adjust the size as needed
+    "filtered_documents": {
+      "filter": {
+        "term": {
+          "bpmnProcessType": "Abc"  // Assuming the field is named 'bpmnProcessType'
+        }
       },
       "aggs": {
-        "top_documents": {
-          "top_hits": {
-            "size": 2  // Assuming you want both documents from the buckets
-            // Add more settings for top_hits if needed (sort, _source, etc.)
+        "group_by_key": {
+          "terms": {
+            "field": "key",
+            "size": 10,
+            "include": {
+              "partition": 0,  // Change for each iteration
+              "num_partitions": 5
+            }
           }
-        },
-        "bucket_filter": {
-          "bucket_selector": {
-            "buckets_path": {
-              "docCount": "_count"
-            },
-            "script": "params.docCount == 2"
-          }
+          // Include other sub-aggregations like top_hits or bucket_selector as needed
         }
       }
     }

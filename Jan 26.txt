@@ -1,40 +1,27 @@
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.aggregations.AggregationBuilders;
-import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.opensearch.search.builder.SearchSourceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-@Service
-public class YourService {
-
-    @Autowired
-    private RestHighLevelClient restHighLevelClient;
-
-    public void findDuplicateRecords() throws IOException {
-        // Define the terms aggregation
-        TermsAggregationBuilder termsAggregation = AggregationBuilders
-            .terms("duplicate_record")
-            .field("Id");
-
-        // Building the search source
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
-            .query(QueryBuilders.matchAllQuery())
-            .aggregation(termsAggregation)
-            .size(0); // Equivalent to "size": 0 in the original query
-
-        // Create the SearchRequest
-        SearchRequest searchRequest = new SearchRequest()
-            .indices("index1", "index2")
-            .source(searchSourceBuilder);
-
-        // Execute the search request
-        var response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
-        // Process the results
-        // Manual processing may be needed to filter the buckets as per the "doc_count == 2" condition.
+{
+  "size": 0,  // We don't need the main query hits, just the aggregation results
+  "aggs": {
+    "group_by_key": {
+      "terms": {
+        "field": "key",
+        "size": 10  // Adjust the size as needed
+      },
+      "aggs": {
+        "top_documents": {
+          "top_hits": {
+            "size": 2  // Assuming you want both documents from the buckets
+            // Add more settings for top_hits if needed (sort, _source, etc.)
+          }
+        },
+        "bucket_filter": {
+          "bucket_selector": {
+            "buckets_path": {
+              "docCount": "_count"
+            },
+            "script": "params.docCount == 2"
+          }
+        }
+      }
     }
+  }
 }

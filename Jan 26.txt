@@ -1,25 +1,45 @@
 {
   "size": 0,
   "aggs": {
-    "filtered_documents": {
-      "filter": {
-        "term": {
-          "bpmnProcessType": "Abc"  // Assuming the field is named 'bpmnProcessType'
-        }
+    "keys": {
+      "terms": {
+        "field": "key",
+        "size": 10  // Adjust based on pagination needs
       },
       "aggs": {
-        "group_by_key": {
-          "terms": {
-            "field": "key",
-            "size": 10,
-            "include": {
-              "partition": 0,  // Change for each iteration
-              "num_partitions": 5
+        "max_sequence": {
+          "max": {
+            "field": "sequence"
+          }
+        },
+        "highest_sequence_docs": {
+          "top_hits": {
+            "sort": [
+              {
+                "sequence": {
+                  "order": "desc"
+                }
+              }
+            ],
+            "size": 1,
+            "_source": {
+              "includes": ["key", "intent", "sequence"]
+            },
+            "script_fields": {
+              "is_correct_intent": {
+                "script": {
+                  "source": "doc['intent'].value == 'ELEMENT_ACTIVATED'"
+                }
+              }
             }
           }
-          // Include other sub-aggregations like top_hits or bucket_selector as needed
         }
       }
+    }
+  },
+  "post_filter": {
+    "term": {
+      "intent": "ELEMENT_ACTIVATED"
     }
   }
 }

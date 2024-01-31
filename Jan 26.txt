@@ -1,48 +1,28 @@
-import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.aggregations.AggregationBuilders;
-import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.opensearch.search.aggregations.pipeline.BucketSelectorPipelineAggregationBuilder;
-import org.opensearch.search.builder.SearchSourceBuilder;
-import org.opensearch.script.Script;
-import java.util.HashMap;
-import java.util.Map;
+import org.opensearch.search.aggregations.Aggregations;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+import org.opensearch.search.aggregations.bucket.terms.Terms.Bucket;
 
-public class OpenSearchQueryExecutor {
+import java.util.ArrayList;
+import java.util.List;
 
-    private final RestHighLevelClient client;
+public class OpenSearchResponseProcessor {
 
-    public OpenSearchQueryExecutor(RestHighLevelClient client) {
-        this.client = client;
-    }
+    public List<String> extractKeysWithDocCountTwo(SearchResponse searchResponse) {
+        List<String> keys = new ArrayList<>();
 
-    public void executeAggregationQuery() throws Exception {
-        SearchRequest searchRequest = new SearchRequest("your_index_name");
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        Aggregations aggregations = searchResponse.getAggregations();
+        if (aggregations != null) {
+            Terms termsAgg = aggregations.get("keys");
+            if (termsAgg != null) {
+                for (Bucket bucket : termsAgg.getBuckets()) {
+                    if (bucket.getDocCount() == 2) {
+                        keys.add(bucket.getKeyAsString());
+                    }
+                }
+            }
+        }
 
-        searchSourceBuilder.query(QueryBuilders.boolQuery()
-            .must(QueryBuilders.wildcardQuery("value.bpmnProcessId", "Demo*"))
-            .must(QueryBuilders.matchQuery("value.bpmnElementType", "PROCESS")));
-
-        Map<String, String> bucketsPathsMap = new HashMap<>();
-        bucketsPathsMap.put("the_count", "_count");
-
-        Script script = new Script("params.the_count == 2");
-
-        BucketSelectorPipelineAggregationBuilder bsAgg = new BucketSelectorPipelineAggregationBuilder("the_filter", bucketsPathsMap, script);
-
-        TermsAggregationBuilder termsAgg = AggregationBuilders.terms("keys")
-            .field("key")
-            .size(10000)
-            .subAggregation(bsAgg);
-
-        searchSourceBuilder.aggregation(termsAgg);
-        searchRequest.source(searchSourceBuilder);
-
-        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-        // Process the searchResponse as needed
+        return keys;
     }
 }

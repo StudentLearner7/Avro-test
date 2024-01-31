@@ -1,58 +1,48 @@
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.builder.SearchRequestBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.client.core.SearchRequest;
-import org.elasticsearch.client.core.SearchResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.opensearch.search.aggregations.pipeline.BucketSelectorPipelineAggregationBuilder;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.script.Script;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MyService {
+public class OpenSearchQueryExecutor {
 
     private final RestHighLevelClient client;
 
-    @Autowired
-    public MyService(RestHighLevelClient client) {
+    public OpenSearchQueryExecutor(RestHighLevelClient client) {
         this.client = client;
     }
 
-    public List<Long> executeCustomQuery() {
-        List<Long> keys = new ArrayList<>();
-        try {
-            // Adjust the index name to match your OpenSearch index
-            SearchRequest searchRequest = new SearchRequest("your_index_name");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+    public void executeAggregationQuery() throws Exception {
+        SearchRequest searchRequest = new SearchRequest("your_index_name");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-            searchSourceBuilder.query(QueryBuilders.boolQuery()
-                .must(QueryBuilders.wildcardQuery("value.bpmnProcessId", "Demo*"))
-                .must(QueryBuilders.matchQuery("value.bpmnElementType", "PROCESS")))
-                .size(0); // We're not interested in the hits, just the aggregations
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+            .must(QueryBuilders.wildcardQuery("value.bpmnProcessId", "Demo*"))
+            .must(QueryBuilders.matchQuery("value.bpmnElementType", "PROCESS")));
 
-            searchSourceBuilder.aggregation(AggregationBuilders.terms("keys")
-                .field("key")
-                .size(10000)
-                .subAggregation(AggregationBuilders.bucketSelector("the_filter",
-                    Map.of("the_count", "_count"),
-                    "params.the_count == 2")));
+        Map<String, String> bucketsPathsMap = new HashMap<>();
+        bucketsPathsMap.put("the_count", "_count");
 
-            searchRequest.source(searchSourceBuilder);
+        Script script = new Script("params.the_count == 2");
 
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        BucketSelectorPipelineAggregationBuilder bsAgg = new BucketSelectorPipelineAggregationBuilder("the_filter", bucketsPathsMap, script);
 
-            Terms terms = searchResponse.getAggregations().get("keys");
-            for (Terms.Bucket bucket : terms.getBuckets()) {
-                // Assuming the key is a Long. Adjust the type if necessary.
-                keys.add((Long) bucket.getKey());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        TermsAggregationBuilder termsAgg = AggregationBuilders.terms("keys")
+            .field("key")
+            .size(10000)
+            .subAggregation(bsAgg);
 
-        return keys;
+        searchSourceBuilder.aggregation(termsAgg);
+        searchRequest.source(searchSourceBuilder);
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        // Process the searchResponse as needed
     }
 }

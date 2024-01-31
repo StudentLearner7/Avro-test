@@ -1,32 +1,58 @@
-import org.springframework.data.opensearch.core.OpenSearchRestTemplate;
-import org.springframework.data.opensearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.opensearch.core.query.Query;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchRequestBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.client.core.SearchRequest;
+import org.elasticsearch.client.core.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class CustomRepositoryImpl implements CustomRepository {
+public class MyService {
 
-    private final OpenSearchRestTemplate template;
+    private final RestHighLevelClient client;
 
     @Autowired
-    public CustomRepositoryImpl(OpenSearchRestTemplate template) {
-        this.template = template;
+    public MyService(RestHighLevelClient client) {
+        this.client = client;
     }
 
-    public List<Integer> executeCustomQuery() {
-        String jsonString = "{ \"size\": 0, \"query\": { \"bool\": { \"must\": [ { \"wildcard\": {\"value.bpmnProcessId\": \"Demo*\"}}, {\"match\" : {\"value.bpmnElementType\" : \"PROCESS\"}} ] } }, \"aggs\": { \"keys\": { \"terms\": { \"field\": \"key\", \"size\": 10000 }, \"aggs\": { \"the_filter\": { \"bucket_selector\": { \"buckets_path\": { \"the_count\": \"_count\" }, \"script\": \"params.the_count == 2\" } } } } } }";
-        Query query = new NativeSearchQueryBuilder()
-                .withQuery(QueryBuilders.wrapperQuery(jsonString))
-                .build();
-        
-        SearchHits<MyEntity> hits = template.search(query, MyEntity.class);
-        // Process the response to extract keys (this part depends on your actual response structure)
-        // Assuming you have a method to extract and convert bucket keys to your desired format
-        
-        return hits.getSearchHits().stream()
-                .map(hit -> hit.getContent().getKey()) // Adjust this mapping based on your actual method to extract keys
-                .collect(Collectors.toList());
+    public List<Long> executeCustomQuery() {
+        List<Long> keys = new ArrayList<>();
+        try {
+            // Adjust the index name to match your OpenSearch index
+            SearchRequest searchRequest = new SearchRequest("your_index_name");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                .must(QueryBuilders.wildcardQuery("value.bpmnProcessId", "Demo*"))
+                .must(QueryBuilders.matchQuery("value.bpmnElementType", "PROCESS")))
+                .size(0); // We're not interested in the hits, just the aggregations
+
+            searchSourceBuilder.aggregation(AggregationBuilders.terms("keys")
+                .field("key")
+                .size(10000)
+                .subAggregation(AggregationBuilders.bucketSelector("the_filter",
+                    Map.of("the_count", "_count"),
+                    "params.the_count == 2")));
+
+            searchRequest.source(searchSourceBuilder);
+
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+
+            Terms terms = searchResponse.getAggregations().get("keys");
+            for (Terms.Bucket bucket : terms.getBuckets()) {
+                // Assuming the key is a Long. Adjust the type if necessary.
+                keys.add((Long) bucket.getKey());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return keys;
     }
 }

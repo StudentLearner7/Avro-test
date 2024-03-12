@@ -1,0 +1,11 @@
+/* Light Mode: Setting Primary Color to Black */
+:root {
+    --md-primary-fg-color: #000000; /* Black */
+}
+
+/* Dark Mode: Setting Primary Color to Dark Red */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --md-primary-fg-color: #8B0000; /* Dark Red */
+    }
+}

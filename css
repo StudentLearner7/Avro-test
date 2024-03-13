@@ -1,35 +1,13 @@
-<div class="grid cards" markdown>
-
--   :material-cog-outline:{ .lg .middle } __Process__
-
-    ---
-
-    Define and manage your business processes with Camunda 8's powerful modeling tools.
-
-    [:material-arrow-right-circle: Learn about Processes](#process-docs-link)
-
--   :material-cogs:{ .lg .middle } __Process Instance__
-
-    ---
-
-    Monitor and manage instances of your deployed processes in the Camunda 8 engine.
-
-    [:material-arrow-right-circle: Process Instances](#process-instance-docs-link)
-
--   :material-handshake:{ .lg .middle } __Task__
-
-    ---
-
-    Manage user and service tasks within your business processes using Camunda 8.
-
-    [:material-arrow-right-circle: Tasks Documentation](#task-docs-link)
-
--   :material-api:{ .lg .middle } __APIs__
-
-    ---
-
-    Integrate your applications using Camunda 8's extensive APIs for process automation.
-
-    [:material-arrow-right-circle: API Reference](#api-docs-link)
-
-</div>
+markdown_extensions:
+  - attr_list
+  - pymdownx.superfences:
+      custom_fences:
+        - name: div
+          class: grid cards
+          format: !!python/name:pymdownx.superfences.fence_div_format
+  - pymdownx.icon:
+      icon_provider: material
+      prefix: 'mdi'
+  - pymdownx.keys
+  - pymdownx.details
+  - admonition

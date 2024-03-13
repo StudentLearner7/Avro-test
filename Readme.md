@@ -1,22 +1,29 @@
-# Camunda 8 Process Instance Overview
+# Camunda 8 Task Overview
 
 ## Introduction
-This document explains the concept of a "Process Instance" in Camunda 8, essential for understanding how processes are executed within the engine.
+This README.md delves into the concept of a "Task" within the Camunda 8 workflow engine, focusing on its role and types in a process.
 
-## What is a Process Instance?
-A Process Instance represents a single execution of a process. Each time a process is triggered, a new instance is created. This instance follows the defined BPMN model, executing tasks and making decisions as per the process design.
+## What is a Task?
+A Task in Camunda 8 represents a unit of work within a process. It's where the actual business logic is executed, potentially involving human interaction or automated systems.
 
-## Lifecycle of a Process Instance
-- **Start:** Triggered by an event, API call, or manually.
-- **Execution:** Moves through the BPMN elements (tasks, gateways) as defined.
-- **End:** Completes once the end event is reached.
+## Types of Tasks
+- **User Task:** Requires human interaction for completion. Assigned to specific users or groups.
+- **Service Task:** Automated task executed by the engine, calling external services or scripts.
+- **Script Task:** Executes a script within the process context.
 
-## Monitoring Process Instances
-Camunda 8's Operate interface allows users to monitor and manage live and historical instances, providing insights into performance and potential issues.
+## Creating and Managing Tasks
+Tasks are defined within the BPMN model using Camunda Modeler. Each task type has specific properties and configurations:
+- **User Tasks** are configured with assignment details.
+- **Service Tasks** require defining the service or script to be called.
+- **Script Tasks** involve scripting logic directly in the model.
 
-## Use Cases
-- **Order Processing:** Each order triggers a new instance, handling the sequence of validation, payment, and shipment.
-- **Customer Onboarding:** New customer sign-ups instantiate a process for verification, account setup, and welcome communication.
+## Task Lifecycle
+1. **Create:** Initiated by the process flow.
+2. **Assign:** (User Tasks) Assigned to users based on rules.
+3. **Complete:** Task is completed, and the process moves forward.
 
-For further details, refer to [Camunda's process instance documentation](https://docs.camunda.io).
+## Importance
+Tasks are fundamental for process execution, enabling detailed control over workflow and the integration of human and automated activities.
+
+For more on tasks in Camunda 8, check out [Camunda's task documentation](https://docs.camunda.io).
 

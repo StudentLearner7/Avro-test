@@ -1,0 +1,33 @@
+markdown_extensions:
+  - markdown.extensions.tables
+
+
+/* Grid container */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Individual cards */
+.card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
+<div class="card-grid">
+  <div class="card">
+    <h2>Card Title 1</h2>
+    <p>Some content for card 1...</p>
+  </div>
+  <div class="card">
+    <h2>Card Title 2</h2>
+    <p>Some content for card 2...</p>
+  </div>
+  <!-- More cards as needed -->
+</div>

@@ -1,13 +1,63 @@
-markdown_extensions:
-  - attr_list
-  - pymdownx.superfences:
-      custom_fences:
-        - name: div
-          class: grid cards
-          format: !!python/name:pymdownx.superfences.fence_div_format
-  - pymdownx.icon:
-      icon_provider: material
-      prefix: 'mdi'
-  - pymdownx.keys
-  - pymdownx.details
-  - admonition
+<!-- Grid Start -->
+<div class="grid cards">
+
+<!-- Card 1: Modeling BPMN with Modeler -->
+<div markdown="1" class="md-card">
+    <h2>Modeling BPMN with Modeler</h2>
+    <p>Learn how to design your business processes using the BPMN standard with our Modeler tool.</p>
+    [Learn More](#modeling-bpmn-with-modeler)
+</div>
+
+<!-- Card 2: What is Process -->
+<div markdown="1" class="md-card">
+    <h2>What is Process</h2>
+    <p>Understand the fundamentals of business process modeling and how it can streamline your operations.</p>
+    [Learn More](#what-is-process)
+</div>
+
+<!-- Card 3: What is Process Instance -->
+<div markdown="1" class="md-card">
+    <h2>What is Process Instance</h2>
+    <p>Discover what a process instance is and its role in executing the models designed in BPMN.</p>
+    [Learn More](#what-is-process-instance)
+</div>
+
+<!-- Card 4: What is Task -->
+<div markdown="1" class="md-card">
+    <h2>What is Task</h2>
+    <p>Get to know about tasks within a process and how they are handled within a workflow.</p>
+    [Learn More](#what-is-task)
+</div>
+
+</div>
+<!-- Grid End -->
+
+
+.grid {
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.md-card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.md-card h2 {
+    margin-top: 0;
+}
+
+.md-card p {
+    font-size: 0.9em;
+}
+
+.md-card a {
+    text-decoration: none;
+    color: #106cc8; /* Change as per your theme color */
+    font-weight: bold;
+}

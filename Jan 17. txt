@@ -1,6 +1,16 @@
-FROM amazoncorretto:17
-COPY . /app
+# Use an OpenJDK 17 base image
+FROM openjdk:17
+
+# Set the working directory in the container
 WORKDIR /app
-RUN yum update -y && yum install -y fontconfig libfreetype6 fonts-dejavu-core fonts-liberation && yum clean all
-# Your application's specific setup commands follow
-CMD ["java", "-jar", "your-application.jar"]
+
+# Copy the application's jar file into the container
+COPY target/your-application.jar /app/
+
+# Install necessary fonts and other dependencies
+RUN apt-get update && \
+    apt-get install -y fontconfig libfreetype6 fonts-dejavu fonts-liberation && \
+    rm -rf /var/lib/apt/lists/*
+
+# Command to run the application
+CMD ["java", "-Djava.awt.headless=true", "-jar", "your-application.jar"]

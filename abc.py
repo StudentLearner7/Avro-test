@@ -18,12 +18,17 @@ def process_csv(input_file, output_file):
             # Delete the 2nd column
             del row[1]
 
-            # Convert the value to integer, considering commas, to check the condition
+            # Convert the value to integer, considering commas, to check the deletion condition
             if row[0].startswith('JSP/Servelet'):
-                value = row[1].replace(',', '')  # Remove commas
+                value = row[2].replace(',', '')  # Adjusted for the removed column
                 if value.isdigit() and int(value) < 5000:
                     # If condition met, stop processing further
                     return
+
+            # Check condition for adding a new row
+            if row[0].startswith('JSP') and len(row) > 3 and row[3] == 'Thread.run':
+                new_row = ['Event', 'Time(ms)', 'Thread', 'Stack Trace', 'Detail', 'Level']
+                writer.writerow(new_row)
 
             writer.writerow(row)
 

@@ -1,46 +1,36 @@
 import pandas as pd
-from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
 
-# Define the input and output files
+# Define the input CSV and output Excel file paths
 input_csv = 'input.csv'
 output_excel = 'output.xlsx'
 
 def process_csv_to_excel(input_csv, output_excel):
-    # Read the data
+    # Read the CSV data, skipping the first row
     data = pd.read_csv(input_csv, skiprows=1, header=None)
 
-    # Delete the 2nd column
-    data.drop(data.columns[1], axis=1, inplace=True)
-    # Define the new header
-    new_header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
-    data.columns = new_header[:len(data.columns)]
+    # Delete the second column
+    data.drop(columns=data.columns[1], inplace=True)
 
-    # Find the index to stop processing
+    # Set the new header
+    new_header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
+    # Ensure the correct number of columns are labeled in case the original CSV had more columns
+    data.columns = new_header[:len(data.columns)] + data.columns[len(data.columns):].tolist()
+
+    # Find the index to stop processing if 'JSP/Servlet' value is less than 5000
     stop_index = None
-    for i, row in data.iterrows():
-        if 'JSP/Servlet' in row['URL']:
-            # Remove commas and convert to int
-            value = int(row['pyActivity'].replace(',', ''))
+    for index, row in data.iterrows():
+        if row[0].startswith('JSP/Servlet'):
+            value = int(row[1].replace(',', ''))
             if value < 5000:
-                stop_index = i
+                stop_index = index
                 break
 
-    # Filter the dataframe if a stop index was found
+    # If a stop index was found, truncate the dataframe to stop at that index
     if stop_index is not None:
         data = data.iloc[:stop_index]
 
-    # Write to Excel
-    wb = Workbook()
-    ws = wb.active
-    for r in dataframe_to_rows(data, index=False, header=True):
-        ws.append(r)
+    # Write the processed data to an Excel file
+    data.to_excel(output_excel, index=False, header=True)
 
-    # Apply grouping
-    event_indices = [i for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2) if row[0] == 'Event']
-    for start, end in zip(event_indices, event_indices[1:] + [ws.max_row + 1]):
-        ws.row_dimensions.group(start+1, end-1, hidden=True)
-
-    wb.save(output_excel)
-
+# Call the function to process the CSV and produce an Excel file
 process_csv_to_excel(input_csv, output_excel)

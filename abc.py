@@ -15,16 +15,16 @@ def process_csv(input_file, output_file):
         writer.writerow(['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls'])
 
         for row in reader:
-            # Delete the 2nd column from the original CSV (which becomes the 1st column after deletion)
-            modified_row = row[:1] + row[2:]
+            # Delete the 2nd column
+            del row[1]
 
-            # Check if the row should stop the process based on your conditions
-            if modified_row[0].lower().startswith('jsp/servlet'):
-                # Check if the value is less than 5000, considering comma removal
-                value = modified_row[1].replace(',', '')
+            # Convert the value to integer, considering commas, to check the condition
+            if row[0].startswith('JSP/Servelet'):
+                value = row[1].replace(',', '')  # Remove commas
                 if value.isdigit() and int(value) < 5000:
-                    break  # Stop processing further rows once condition is met
+                    # If condition met, stop processing further
+                    return
 
-            writer.writerow(modified_row)
+            writer.writerow(row)
 
 process_csv(input_file, output_file)

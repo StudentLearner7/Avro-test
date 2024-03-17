@@ -1,57 +1,40 @@
 import pandas as pd
-from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import load_workbook
 
-input_file = 'input.csv'  # Path to your input CSV file
-output_excel_file = 'output.xlsx'  # Path to the output Excel file
+# Input and output file paths
+input_file = 'input.csv'
+output_excel_file = 'output.xlsx'
 
-def process_csv_and_create_excel(input_file, output_excel_file):
-    # Read the CSV, skipping the first row (header) from the original file
-    df = pd.read_csv(input_file, skiprows=1, header=None)
+# Read the CSV, skip the first original row, and manually set new column headers
+df = pd.read_csv(input_file, skiprows=1, header=None)
+new_columns = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
+df.columns = new_columns[:len(df.columns)-1] + df.columns[len(df.columns)-1:].tolist()  # Adjust for deleted column
 
-    # Delete the 2nd column
-    df.drop(1, axis=1, inplace=True)
+# Delete the 2nd column
+df.drop(df.columns[1], axis=1, inplace=True)
 
-    # Define the new header
-    new_header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
-    
-    # Adjust the header based on the number of columns in df
-    df.columns = new_header[:df.shape[1]]
+# Find the rows to stop processing at (first column starts with "JSP/Servlet" and value < 5000 in the now second column)
+stop_index = None
+for index, row in df.iterrows():
+    if row[0].startswith('JSP/Servlet'):
+        value = int(row[1].replace(',', ''))
+        if value < 5000:
+            stop_index = index
+            break
 
-    # Find the index where "JSP/Servlet" rows with value in the second column less than 5000
-    stop_index = None
-    for index, row in df.iterrows():
-        if row['URL'].startswith('JSP/Servlet'):
-            value = int(row['pyActivity'].replace(',', ''))
-            if value < 5000:
-                stop_index = index
-                break
+# If a stop index is found, truncate the dataframe up to that point
+if stop_index is not None:
+    df = df.loc[:stop_index-1]
 
-    # If such a row is found, keep only the rows before it
-    if stop_index is not None:
-        df = df.iloc[:stop_index]
+# Save processed DataFrame to Excel
+df.to_excel(output_excel_file, index=False)
 
-    # Initialize an Excel writer with openpyxl engine
-    writer = pd.ExcelWriter(output_excel_file, engine='openpyxl')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')  # Write the DataFrame to an Excel file
-    writer.save()
+# Now use openpyxl for adding groupings
+wb = load_workbook(output_excel_file)
+ws = wb.active
 
-    # Apply grouping using openpyxl
-    wb = writer.book
-    ws = wb.active
+event_rows = [row[0].row for row in ws if row[0].value == 'Event']
+for start, end in zip(event_rows, event_rows[1:] + [ws.max_row]):
+    ws.row_dimensions.group(start + 1, end - 1, hidden=True)
 
-    # Initialize variables for grouping logic
-    group_start = None
-    for idx, row in enumerate(ws.iter_rows(min_row=2, max_col=1, values_only=True), start=2):
-        if row[0] == 'Event':
-            if group_start is not None:
-                ws.row_dimensions.group(group_start, idx - 1, hidden=True)
-            group_start = idx
-
-    # Final group to the end
-    if group_start is not None:
-        ws.row_dimensions.group(group_start, ws.max_row, hidden=True)
-
-    wb.save(output_excel_file)
-
-process_csv_and_create_excel(input_file, output_excel_file)
+wb.save(output_excel_file)

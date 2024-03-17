@@ -1,49 +1,46 @@
 import pandas as pd
-import csv
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+# Define the input and output files
 input_csv = 'input.csv'
 output_excel = 'output.xlsx'
 
 def process_csv_to_excel(input_csv, output_excel):
-    # Process CSV: read, apply conditions, and filter rows.
-    with open(input_csv, newline='') as infile:
-        reader = list(csv.reader(infile))
-        header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
-        rows_to_keep = []
-        stop_processing = False
+    # Read the data
+    data = pd.read_csv(input_csv, skiprows=1, header=None)
 
-        for i, row in enumerate(reader[1:], start=1):  # Skip original header row
-            del row[1]  # Delete 2nd column
+    # Delete the 2nd column
+    data.drop(data.columns[1], axis=1, inplace=True)
+    # Define the new header
+    new_header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
+    data.columns = new_header[:len(data.columns)]
 
-            if row[0].startswith('JSP/Servlet'):
-                value = int(row[1].replace(',', ''))
-                if value < 5000:
-                    stop_processing = True
-                    break  # Stop adding rows
+    # Find the index to stop processing
+    stop_index = None
+    for i, row in data.iterrows():
+        if 'JSP/Servlet' in row['URL']:
+            # Remove commas and convert to int
+            value = int(row['pyActivity'].replace(',', ''))
+            if value < 5000:
+                stop_index = i
+                break
 
-            if row[0].startswith('JSP') and 'Thread.run' in row:
-                # Insert special row before the current row
-                special_row = ['Event', 'Time(ms)', 'Thread', 'Stack Trace', 'Detail', 'Level']
-                rows_to_keep.append(special_row)
+    # Filter the dataframe if a stop index was found
+    if stop_index is not None:
+        data = data.iloc[:stop_index]
 
-            rows_to_keep.append(row)
-
-        if not stop_processing:
-            # If the loop wasn't broken, all rows are processed without encountering the stop condition
-            rows_to_keep = reader[1:]  # Re-include all rows if no stop condition met
-
-    # Create a new Excel workbook and sheet
+    # Write to Excel
     wb = Workbook()
     ws = wb.active
+    for r in dataframe_to_rows(data, index=False, header=True):
+        ws.append(r)
 
-    # Write new header and rows
-    ws.append(header)
-    for row in rows_to_keep:
-        ws.append(row)
+    # Apply grouping
+    event_indices = [i for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2) if row[0] == 'Event']
+    for start, end in zip(event_indices, event_indices[1:] + [ws.max_row + 1]):
+        ws.row_dimensions.group(start+1, end-1, hidden=True)
 
-    # Save workbook
     wb.save(output_excel)
 
 process_csv_to_excel(input_csv, output_excel)

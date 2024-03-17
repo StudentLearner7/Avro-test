@@ -1,42 +1,49 @@
 import pandas as pd
+import csv
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
 
-# Correct path for input CSV and output Excel file
-input_file = 'input.csv'
-output_excel_file = 'output.xlsx'
+input_csv = 'input.csv'
+output_excel = 'output.xlsx'
 
-# Load the CSV file, skipping the first row as it's original headers
-df = pd.read_csv(input_file, skiprows=1, header=None)
+def process_csv_to_excel(input_csv, output_excel):
+    # Process CSV: read, apply conditions, and filter rows.
+    with open(input_csv, newline='') as infile:
+        reader = list(csv.reader(infile))
+        header = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
+        rows_to_keep = []
+        stop_processing = False
 
-# Define new headers, after considering the deletion of the 2nd column
-new_headers = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
-df.drop(columns=[1], inplace=True)  # Delete the 2nd column
-df.columns = new_headers[:len(df.columns)]  # Reassign new headers
+        for i, row in enumerate(reader[1:], start=1):  # Skip original header row
+            del row[1]  # Delete 2nd column
 
-# Apply the logic to stop processing at a specific row
-for i, row in df.iterrows():
-    if row['URL'].startswith('JSP/Servlet'):
-        try:
-            # Assuming the value is now in the 'PreActivity' column after deletion
-            value = int(row['PreActivity'].replace(',', ''))
-            if value < 5000:
-                df = df.iloc[:i]  # Keep rows up to but not including the current one
-                break
-        except ValueError:
-            # In case conversion to int fails, ignore and continue
-            continue
+            if row[0].startswith('JSP/Servlet'):
+                value = int(row[1].replace(',', ''))
+                if value < 5000:
+                    stop_processing = True
+                    break  # Stop adding rows
 
-# Save the modified DataFrame to an Excel file
-df.to_excel(output_excel_file, index=False)
+            if row[0].startswith('JSP') and 'Thread.run' in row:
+                # Insert special row before the current row
+                special_row = ['Event', 'Time(ms)', 'Thread', 'Stack Trace', 'Detail', 'Level']
+                rows_to_keep.append(special_row)
 
-# Now, apply grouping using openpyxl
-from openpyxl import load_workbook
+            rows_to_keep.append(row)
 
-wb = load_workbook(output_excel_file)
-ws = wb.active
+        if not stop_processing:
+            # If the loop wasn't broken, all rows are processed without encountering the stop condition
+            rows_to_keep = reader[1:]  # Re-include all rows if no stop condition met
 
-# Assuming 'Event' is in the 'URL' column, identify rows needing grouping
-event_rows = [cell.row for cell in ws['A'] if cell.value == 'Event']
-for start, end in zip(event_rows, event_rows[1:] + [ws.max_row + 1]):
-    ws.row_dimensions.group(start + 1, end - 1, hidden=True)
+    # Create a new Excel workbook and sheet
+    wb = Workbook()
+    ws = wb.active
 
-wb.save(output_excel_file)
+    # Write new header and rows
+    ws.append(header)
+    for row in rows_to_keep:
+        ws.append(row)
+
+    # Save workbook
+    wb.save(output_excel)
+
+process_csv_to_excel(input_csv, output_excel)

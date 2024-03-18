@@ -13,7 +13,7 @@ def extract_data_from_row(row):
     return '', '', ''
 
 def process_csv(input_file, output_file):
-    with open(input_file, newline='') as infile, open(output_file, 'w', newline='') as outfile:
+    with open(input_file, 'r', newline='') as infile, open(output_file, 'w', newline='') as outfile:
         reader = csv.reader(infile)
         writer = csv.writer(outfile)
 
@@ -26,7 +26,7 @@ def process_csv(input_file, output_file):
         stop_processing = False
         rows_to_write = []
 
-        for row in list(reader):
+        for row in reader:
             if stop_processing:
                 break
 
@@ -41,10 +41,13 @@ def process_csv(input_file, output_file):
                     stop_processing = True
                     continue
 
-            # Insert a new row before rows meeting specific criteria
+            # Check if the row is 'Event' to trigger the special processing
             if not stop_processing and row[0] == 'Event':
+                event_found = True
+                # Save the current position of the reader
+                current_position = infile.tell()
                 # Find the next row with 'Thread.run'
-                for subsequent_row in list(reader):
+                for subsequent_row in reader:
                     if 'Thread.run' in subsequent_row:
                         # Extract the data from the row
                         url, py_activity, pre_activity = extract_data_from_row(subsequent_row)
@@ -53,6 +56,8 @@ def process_csv(input_file, output_file):
                         calculated_row = [url, py_activity, pre_activity, response_time, '', '']  # Empty strings for #DBCalls and #API Calls
                         rows_to_write.append(calculated_row)
                         break
+                # Restore the reader to the saved position
+                infile.seek(current_position)
 
             rows_to_write.append(row)
 

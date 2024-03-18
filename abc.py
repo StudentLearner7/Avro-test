@@ -1,64 +1,48 @@
 import csv
+import re
 
-input_file = 'input.csv'  # Path to your input CSV file
-output_file = 'output.csv'  # Path to the intermediate output CSV file
-final_output_file = 'final_output.csv'  # Path to the final output CSV file
+# Define the input CSV and output CSV file paths
+input_csv = 'input.csv'
+intermediate_output_csv = 'output.csv'  # Intermediate file after initial processing
+final_output_csv = 'final_output.csv'  # Final output file with inserted rows
 
-def process_csv(input_file, output_file):
-    with open(input_file, newline='') as infile, open(output_file, 'w', newline='') as outfile:
+# Process the original CSV to create an intermediate CSV file
+def process_csv(input_csv, intermediate_output_csv):
+    # ... (same as before)
+
+# This function assumes 'Event' rows are followed by a row that contains the data to extract.
+def insert_rows_before_event(intermediate_output_csv, final_output_csv):
+    with open(intermediate_output_csv, newline='') as infile, open(final_output_csv, 'w', newline='') as outfile:
         reader = csv.reader(infile)
         writer = csv.writer(outfile)
 
-        # Skip the original first row
-        next(reader)
-
-        # Write the new header
-        writer.writerow(['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls'])
-
-        stop_processing = False
-
-        for row in list(reader):
-            if stop_processing:
-                break
-
-            # Delete the 2nd column
-            del row[1]
-
-            # Check if the row meets the "JSP/Servlet" condition
-            if row[0].startswith('JSP/Servlet'):
-                value = row[1].replace(',', '')  # Adjust for the deleted column
-                if value.isdigit() and int(value) < 5000:
-                    # If condition is met, mark to stop processing further rows
-                    stop_processing = True
-                    continue
-
-            # Insert a new row before rows meeting specific criteria
-            if not stop_processing and row[0].startswith('JSP') and len(row) > 3 and row[3] == 'Thread.run':
-                new_row = ['Event', 'Time(ms)', 'Thread', 'Stack Trace', 'Detail', 'Level']
-                writer.writerow(new_row)
-
-            writer.writerow(row)
-
-# Apply the first function to process the CSV and create an output file
-process_csv(input_file, output_file)
-
-def insert_rows_before_event(output_file, final_output_file):
-    with open(output_file, newline='') as infile, open(final_output_file, 'w', newline='') as outfile:
-        reader = csv.reader(infile)
-        writer = csv.writer(outfile)
-
-        # Write the new header
+        # Write the header to the final output file
         writer.writerow(next(reader))  # Assumes the first row is the header
 
-        rows = list(reader)
-        for i, row in enumerate(rows):
-            # Check for 'Event' and insert the new calculated row before it
-            if row[0] == 'Event':
-                # Assuming the previous row contains the data needed for calculation
-                # Insert your logic here to calculate values from the previous row if needed
-                calculated_row = ['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls']
-                writer.writerow(calculated_row)
-            writer.writerow(row)
+        # Initialize a placeholder for the previously processed row
+        previous_row = None
 
-# Apply the second function to insert a row before each 'Event' record
-insert_rows_before_event(output_file, final_output_file)
+        for row in reader:
+            if row[0] == 'Event' and previous_row:
+                # Extract data using regex from the 5th column of the previous row
+                data_match = re.search(r'URI="([^"]+)"Query="[^"]*pyActivity=([^&]+)&.*?PreActivity=([^&]+)', previous_row[4])
+                if data_match:
+                    # Extracted values from the regex groups
+                    extracted_url = data_match.group(1)
+                    extracted_py_activity = data_match.group(2)
+                    extracted_pre_activity = data_match.group(3)
+                    # Response time assumed to be in the 3rd column of the 'Thread.run' row
+                    response_time = previous_row[2]
+                    # Insert the new row with extracted values
+                    new_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']  # Empty strings for #DBCalls and #API Calls
+                    writer.writerow(new_row)
+
+            # Write the current row and update the previous row placeholder
+            writer.writerow(row)
+            previous_row = row
+
+# First, process the original CSV to create an intermediate CSV file
+process_csv(input_csv, intermediate_output_csv)
+
+# Then, insert calculated rows before 'Event' rows in the intermediate CSV to create the final output CSV
+insert_rows_before_event(intermediate_output_csv, final_output_csv)

@@ -1,7 +1,6 @@
 import csv
 import re
 
-# Process the original CSV and create an intermediate CSV file.
 def process_initial_csv(input_file, intermediate_output_file):
     with open(input_file, newline='') as infile, open(intermediate_output_file, 'w', newline='') as outfile:
         reader = csv.reader(infile)
@@ -34,7 +33,6 @@ def process_initial_csv(input_file, intermediate_output_file):
 
             writer.writerow(row)
 
-# Apply a second processing step on the intermediate CSV to insert calculated rows before 'Event' rows.
 def insert_calculated_rows(intermediate_output_file, final_output_file):
     with open(intermediate_output_file, newline='') as infile, open(final_output_file, 'w', newline='') as outfile:
         reader = csv.reader(infile)
@@ -43,33 +41,28 @@ def insert_calculated_rows(intermediate_output_file, final_output_file):
         # Write the header
         writer.writerow(next(reader))  # Assumes the first row is the header
 
-        # Initialize a list to keep track of the rows
         rows = list(reader)
         for i, row in enumerate(rows):
             if row[0] == 'Event':
-                # Check for the row after the Event row where the data should be extracted
-                if i + 1 < len(rows) and 'Thread.run' in rows[i + 1]:
+                if i + 1 < len(rows) and 'Thread.run' in rows[i + 1][3]:
                     data_row = rows[i + 1]
-                    # Use regex to extract the necessary values from the data row
-                    match = re.search(r'URI="([^"]*)".*?pyActivity=([^&]*)&.*?PreActivity=([^&]*)&', data_row[4])
+                    # Adjusted regex pattern to match the sample provided
+                    match = re.search(r'URI="([^"]*)"Query="pyActivity=([^&]*)&.*?PreActivity=([^&]*)&', data_row[4])
                     if match:
                         extracted_url = match.group(1)
                         extracted_py_activity = match.group(2)
                         extracted_pre_activity = match.group(3)
-                        # Response time is assumed to be in the third column
-                        response_time = data_row[2]
+                        response_time = data_row[2]  # Assuming the response time is in the third column
                         # Insert the new calculated row
-                        calculated_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']  # Assuming empty for #DBCalls and #API Calls
+                        calculated_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']
                         writer.writerow(calculated_row)
             writer.writerow(row)
 
-# Define your file paths
+# File paths
 input_file = 'input.csv'
 intermediate_output_file = 'output.csv'
 final_output_file = 'final_output.csv'
 
-# Run the first processing function
+# Run the processing functions
 process_initial_csv(input_file, intermediate_output_file)
-
-# Then, run the second processing function to insert the calculated rows
 insert_calculated_rows(intermediate_output_file, final_output_file)

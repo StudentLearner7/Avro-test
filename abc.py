@@ -46,16 +46,25 @@ def insert_calculated_rows(intermediate_output_file, final_output_file):
             if row[0] == 'Event':
                 if i + 1 < len(rows) and 'Thread.run' in rows[i + 1][3]:
                     data_row = rows[i + 1]
-                    # Adjusted regex pattern to match the sample provided
-                    match = re.search(r'URI="([^"]*)"Query="pyActivity=([^&]*)&.*?PreActivity=([^&]*)&', data_row[4])
-                    if match:
-                        extracted_url = match.group(1)
-                        extracted_py_activity = match.group(2)
-                        extracted_pre_activity = match.group(3)
-                        response_time = data_row[2]  # Assuming the response time is in the third column
-                        # Insert the new calculated row
-                        calculated_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']
-                        writer.writerow(calculated_row)
+
+                    # Extract URL
+                    extracted_url = re.search(r'URI="([^"]*)"', data_row[4]).group(1)
+
+                    # Extract pyActivity and PreActivity using the regex
+                    matchpyActivity = re.search(r'pyActivity=([^&]*)', data_row[4])
+                    matchPreActivity = re.search(r'PreActivity=([^&]*)', data_row[4])
+
+                    # Check if the matches are successful and extract or assign 'NA'
+                    extracted_py_activity = matchpyActivity.group(1) if matchpyActivity else "NA"
+                    extracted_pre_activity = matchPreActivity.group(1) if matchPreActivity else "NA"
+
+                    # Assume response time is in the third column
+                    response_time = data_row[1]
+
+                    # Insert the new calculated row
+                    calculated_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']
+                    writer.writerow(calculated_row)
+                    
             writer.writerow(row)
 
 # File paths

@@ -1,67 +1,75 @@
 import csv
 import re
 
-input_file = 'input.csv'  # Path to your input CSV file
-final_output_file = 'final_output.csv'  # Path to the final output CSV file
-
-def process_csv(input_file, final_output_file):
-    with open(input_file, newline='') as infile, open(final_output_file, 'w', newline='') as outfile:
+# Process the original CSV and create an intermediate CSV file.
+def process_initial_csv(input_file, intermediate_output_file):
+    with open(input_file, newline='') as infile, open(intermediate_output_file, 'w', newline='') as outfile:
         reader = csv.reader(infile)
         writer = csv.writer(outfile)
 
-        # Skip the original first row
+        # Skip the original first row and write the new header
         next(reader)
-
-        # Write the new header
         writer.writerow(['URL', 'pyActivity', 'PreActivity', 'ResponseTime', '#DBCalls', '#API Calls'])
 
-        rows = list(reader)
-        processed_rows = []  # This will store the processed rows with the inserted data
+        stop_processing = False
 
-        i = 0
-        while i < len(rows):
-            row = rows[i]
+        for row in reader:
+            if stop_processing:
+                break
+
             # Delete the 2nd column
             del row[1]
 
+            # Check if the row meets the "JSP/Servlet" condition
             if row[0].startswith('JSP/Servlet'):
-                value = row[1].replace(',', '')  # Adjust for the deleted column
+                value = row[1].replace(',', '')
                 if value.isdigit() and int(value) < 5000:
-                    # If condition is met, stop processing further rows
-                    break
+                    stop_processing = True
+                    continue
 
+            # Insert a placeholder row before rows meeting specific criteria
+            if not stop_processing and row[0].startswith('JSP') and 'Thread.run' in row:
+                placeholder_row = ['Event', 'Time(ms)', 'Thread', 'Stack Trace', 'Detail', 'Level']
+                writer.writerow(placeholder_row)
+
+            writer.writerow(row)
+
+# Apply a second processing step on the intermediate CSV to insert calculated rows before 'Event' rows.
+def insert_calculated_rows(intermediate_output_file, final_output_file):
+    with open(intermediate_output_file, newline='') as infile, open(final_output_file, 'w', newline='') as outfile:
+        reader = csv.reader(infile)
+        writer = csv.writer(outfile)
+
+        # Write the header
+        writer.writerow(next(reader))  # Assumes the first row is the header
+
+        # Initialize a list to keep track of the rows
+        rows = list(reader)
+        for i, row in enumerate(rows):
             if row[0] == 'Event':
-                # Initialize extracted values
-                extracted_url = ''
-                extracted_py_activity = ''
-                extracted_pre_activity = ''
-                response_time = ''
-
-                # Find the next row with 'Thread.run'
-                j = i + 1
-                while j < len(rows) and 'Thread.run' not in rows[j]:
-                    j += 1
-
-                if j < len(rows):
-                    # Assuming the 5th column of the row contains the URL and activities
-                    match = re.search(r'URI="([^"]+)"Query="[^"]*pyActivity=([^&]+)&[^"]*PreActivity=([^&]+)', rows[j][4])
+                # Check for the row after the Event row where the data should be extracted
+                if i + 1 < len(rows) and 'Thread.run' in rows[i + 1]:
+                    data_row = rows[i + 1]
+                    # Use regex to extract the necessary values from the data row
+                    match = re.search(r'URI="([^"]*)".*pyActivity=([^&]*)&.*PreActivity=([^&]*)&', data_row[4])
                     if match:
                         extracted_url = match.group(1)
                         extracted_py_activity = match.group(2)
                         extracted_pre_activity = match.group(3)
-                        response_time = rows[j][2]  # Assuming the 3rd column contains the response time
+                        # Response time is assumed to be in the third column
+                        response_time = data_row[2]
+                        # Insert the new calculated row
+                        calculated_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']  # Assuming empty for #DBCalls and #API Calls
+                        writer.writerow(calculated_row)
+            writer.writerow(row)
 
-                    # Create the new row to insert before the 'Event' row
-                    new_row = [extracted_url, extracted_py_activity, extracted_pre_activity, response_time, '', '']
-                    processed_rows.append(new_row)
+# Define your file paths
+input_file = 'input.csv'
+intermediate_output_file = 'output.csv'
+final_output_file = 'final_output.csv'
 
-                # Move the index to the row after 'Thread.run'
-                i = j
+# Run the first processing function
+process_initial_csv(input_file, intermediate_output_file)
 
-            processed_rows.append(row)
-            i += 1
-
-        # Write all processed rows to the output file
-        writer.writerows(processed_rows)
-
-process_csv(input_file, final_output_file)
+# Then, run the second processing function to insert the calculated rows
+insert_calculated_rows(intermediate_output_file, final_output_file)
